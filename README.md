@@ -6,7 +6,7 @@ Funciona **sobre** [agent-security-policies](https://github.com/raomaster/agent-
 
 ```
 Capa 1: npx agent-security-policies  →  AGENT_RULES.md + CLAUDE.md + AGENTS.md + skills de seguridad
-Capa 2: ./install.sh                 →  orquestación multi-agente + GEMINI.md + skills de pipeline
+Capa 2: npx secure-coding-agent      →  orquestación multi-agente + GEMINI.md + skills de pipeline
 ```
 
 ---
@@ -40,7 +40,18 @@ npm i -g @openai/codex
 codex  # → "Sign in with ChatGPT"
 ```
 
-### En un proyecto nuevo
+### Desde npm
+
+```bash
+# Ejecutar sin instalar globalmente
+npx secure-coding-agent --target /path/to/tu-proyecto
+
+# O instalar globalmente
+npm i -g secure-coding-agent
+secure-coding-agent --target /path/to/tu-proyecto
+```
+
+### Desde el repo
 
 ```bash
 git clone https://github.com/raomaster/secure-coding-agent.git
