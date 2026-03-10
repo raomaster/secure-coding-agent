@@ -1,0 +1,60 @@
+{
+  "name": "secure-coding-agent",
+  "version": "0.1.0",
+  "description": "Security-first AI agent workflow for subscription-based AI CLIs — Sonnet (Planner) · Haiku (Coder) · Gemini Pro (Reviewer) · Gemini Flash (Reporter) · Codex (Specialist).",
+  "keywords": [
+    "secure-coding",
+    "secure-development",
+    "agent-workflow",
+    "claude",
+    "gemini",
+    "codex",
+    "ai-agent",
+    "orchestration",
+    "claude-code",
+    "gemini-cli",
+    "security"
+  ],
+  "author": "raomaster",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/raomaster/secure-coding-agent.git"
+  },
+  "homepage": "https://github.com/raomaster/secure-coding-agent",
+  "bugs": {
+    "url": "https://github.com/raomaster/secure-coding-agent/issues"
+  },
+  "bin": {
+    "secure-coding-agent": "dist/cli.js"
+  },
+  "main": "dist/cli.js",
+  "type": "module",
+  "files": [
+    "dist/",
+    "CLAUDE.md",
+    "GEMINI.md",
+    ".claude/commands/",
+    ".claude/settings.json"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "peerDependencies": {
+    "agent-security-policies": ">=1.4.2"
+  },
+  "peerDependenciesMeta": {
+    "agent-security-policies": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
+  }
+}

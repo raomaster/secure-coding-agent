@@ -1,0 +1,88 @@
+{
+  "version": "0.1.0",
+  "roles": {
+    "planner": {
+      "cli": "claude",
+      "model": "sonnet",
+      "subscription": "Claude Pro",
+      "note": "Orchestrator — runs as the current Claude Code session (Sonnet 4.6)"
+    },
+    "coder": {
+      "cli": "claude",
+      "model": "haiku",
+      "subscription": "Claude Pro",
+      "note": "Spawned worker for implementation tasks"
+    },
+    "reviewer": {
+      "cli": "gemini",
+      "model": "pro",
+      "subscription": "Google One AI Premium",
+      "note": "Security review with 2M token context"
+    },
+    "reporter": {
+      "cli": "gemini",
+      "model": "flash",
+      "subscription": "Google One AI Premium",
+      "note": "Fast executive summaries"
+    },
+    "specialist": {
+      "cli": "codex",
+      "model": "o4-mini",
+      "subscription": "ChatGPT Plus/Pro",
+      "note": "Complex algorithms and second opinion"
+    }
+  },
+  "cli_adapters": {
+    "claude": {
+      "description": "Claude Code CLI (Anthropic)",
+      "coder_cmd": "CLAUDECODE= claude --model {model} --print --no-session-persistence --permission-mode bypassPermissions -p \"{prompt}\"",
+      "models": {
+        "haiku": "claude-haiku-4-5-20251001",
+        "sonnet": "claude-sonnet-4-6",
+        "opus": "claude-opus-4-6"
+      },
+      "note_opus": "AVOID opus in Claude Pro — consumes full token budget in one prompt"
+    },
+    "gemini": {
+      "description": "Gemini CLI (Google)",
+      "review_cmd": "cat {files} | gemini -m {model} --yolo -p \"{prompt}\"",
+      "prompt_cmd": "gemini -m {model} --yolo -p \"{prompt}\"",
+      "models": {
+        "pro": "pro",
+        "flash": "flash",
+        "flash-lite": "flash-lite"
+      }
+    },
+    "codex": {
+      "description": "Codex CLI (OpenAI)",
+      "coder_cmd": "codex --approval-policy auto-edit -q \"{prompt}\"",
+      "review_cmd": "codex -q \"{prompt}\"",
+      "models": {
+        "o4-mini": "o4-mini",
+        "o3": "o3"
+      }
+    },
+    "github-copilot": {
+      "description": "GitHub Copilot CLI",
+      "coder_cmd": "gh copilot suggest -t shell \"{prompt}\"",
+      "models": {
+        "default": "gpt-4o"
+      },
+      "note": "Limited non-interactive support — best for shell suggestions"
+    },
+    "opencode": {
+      "description": "OpenCode (sst/opencode)",
+      "coder_cmd": "opencode run \"{prompt}\"",
+      "models": {
+        "auto": "auto"
+      },
+      "note": "Requires opencode.ai subscription — not Claude Pro/Google One"
+    }
+  },
+  "checkpoints": {
+    "strategy": "git-stash",
+    "prefix": "mca-checkpoint",
+    "fallback_dir": ".multi-agent-checkpoints",
+    "note": "git-stash preferred — doesn't pollute git history. Fallback copies files for non-git repos."
+  }
+}
