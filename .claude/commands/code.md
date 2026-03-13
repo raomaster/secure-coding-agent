@@ -1,27 +1,27 @@
 ---
-description: "Fase 3: Delegar implementación al CLI configurado como 'coder' en .multi-agent.json (default: Haiku 4.5)"
+description: "Phase 3: Delegate implementation to the CLI configured as 'coder' in .multi-agent.json (default: Haiku 4.5)"
 ---
 
-Implementa la tarea delegando al CLI configurado como `coder` en `.multi-agent.json`:
+Implement the task by delegating it to the CLI configured as `coder` in `.multi-agent.json`:
 
 $ARGUMENTS
 
-## Proceso
+## Process
 
-### 0. Checkpoint automático (SIEMPRE primero)
+### 0. Automatic checkpoint (always first)
 
-Antes de modificar cualquier archivo, crea un checkpoint:
+Before modifying any file, create a checkpoint:
 
 ```bash
 git add -A 2>/dev/null
 git stash push -m "mca-checkpoint: before-code-$(date +%Y%m%d-%H%M%S)" --include-untracked 2>/dev/null \
-  && echo "✅ Checkpoint creado" \
-  || echo "⚠️  Sin git — crea backup manual si es necesario"
+  && echo "Checkpoint created" \
+  || echo "No git repository detected. Create a manual backup if needed."
 ```
 
-> Si el resultado no es correcto → `/rollback` para volver aquí.
+> If the result is wrong, use `/rollback` immediately.
 
-### 1. Lee la configuración del coder
+### 1. Read the coder configuration
 
 ```bash
 python3 -c "
@@ -39,16 +39,16 @@ print(f'Command template: {cmd_template}')
 "
 ```
 
-### 2. Prepara el contexto completo
+### 2. Prepare the full context
 
-El coder no puede pedir más información — proporciona TODO upfront:
-- Lee los archivos relevantes con Read/Glob/Grep
-- Identifica tipos, interfaces, convenciones, tests existentes
-- Determina si hay dependencias entre subtareas (paralelo vs secuencial)
+The coder cannot ask for more context later, so provide everything up front:
+- Read the relevant files with `Read`, `Glob`, and `Grep`
+- Identify types, interfaces, conventions, and existing tests
+- Decide whether subtasks are dependent or can run in parallel
 
-### 3. Construye y ejecuta el comando según CLI configurado
+### 3. Build and run the command for the configured CLI
 
-#### Si coder = claude (default: Haiku 4.5)
+#### If coder = claude (default: Haiku 4.5)
 
 ```bash
 CLAUDECODE= claude \
@@ -56,29 +56,29 @@ CLAUDECODE= claude \
   --print \
   --no-session-persistence \
   --permission-mode bypassPermissions \
-  -p "CONTEXTO:\n$(head -80 CLAUDE.md)\n\nCONVENCIONES DEL PROYECTO:\n[ejemplos de código relevante]\n\nTAREA:\n[descripción completa]\n\nARCHIVOS A MODIFICAR:\n[contenido actual]\n\nDEFINICIÓN DE DONE:\n[criterio verificable]\n\nSEGURIDAD OBLIGATORIA:\n- shell=False en subprocess\n- Parameterized queries para SQL\n- Nunca hardcodear secrets\n- Typed exceptions, nunca bare except"
+  -p "CONTEXT:\n$(head -80 CLAUDE.md)\n\nPROJECT CONVENTIONS:\n[relevant code examples]\n\nTASK:\n[complete description]\n\nFILES TO MODIFY:\n[current content]\n\nDEFINITION OF DONE:\n[verifiable success criteria]\n\nMANDATORY SECURITY RULES:\n- shell=False for subprocess calls\n- Parameterized queries for SQL\n- Never hardcode secrets\n- Typed exceptions, never bare except"
 ```
 
-#### Si coder = codex
+#### If coder = codex
 
 ```bash
-codex --approval-policy auto-edit -q "[descripción completa de la tarea con contexto]"
+codex --approval-policy auto-edit -q "[complete task description with context]"
 ```
 
-#### Si coder = opencode
+#### If coder = opencode
 
 ```bash
-opencode run "[descripción completa de la tarea con contexto]"
+opencode run "[complete task description with context]"
 ```
 
-### 4. Tareas paralelas (solo si no hay dependencias entre archivos)
+### 4. Parallel work (only when there are no file dependencies)
 
-Envía múltiples Bash calls en el **mismo mensaje** para ejecución paralela.
-Cada worker tiene su propio contexto limpio — no contamina la sesión principal.
+Send multiple Bash calls in the same message for real parallel execution.
+Each worker has a clean context and does not pollute the main session.
 
-### 5. Verifica el resultado
+### 5. Verify the result
 
-- Revisa la salida del worker
-- Verifica que los archivos tengan el resultado esperado
-- Si el output NO cumple lo solicitado → **`/rollback`** (más barato que corregir con más AI)
-- Si cumple → continúa con `/review`
+- Review the worker output
+- Confirm the files contain the expected result
+- If the output does not meet the request, use `/rollback`
+- If it looks correct, continue with `/review`

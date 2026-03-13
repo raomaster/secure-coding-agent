@@ -25,12 +25,12 @@ install(args).catch((err: Error) => {
 // ─── Help ────────────────────────────────────────────────────────────
 function printHelp(): void {
     console.log(`
-  ${PACKAGE_NAME} — multi-agent orchestration for subscription-based AI CLIs
+  ${PACKAGE_NAME} — security-first AI agent workflow for subscription-based AI CLIs
 
   Usage:  npx ${PACKAGE_NAME} [OPTIONS]
 
   Options:
-    --target <dir>       Target project directory (default: .)
+    --target <dir>       Target project directory (default: current directory)
     --mcp                Also install .claude/settings.json with MCP servers
     --no-security        Skip agent-security-policies layer (orchestration only)
     --profile <name>     Security profile: standard or lite (default: standard)
@@ -38,10 +38,10 @@ function printHelp(): void {
     --help, -h           Show this help
 
   Examples:
-    npx ${PACKAGE_NAME}                          # install in current directory
-    npx ${PACKAGE_NAME} --target ./my-project   # install in a specific project
-    npx ${PACKAGE_NAME} --mcp                   # include MCP servers config
-    npx ${PACKAGE_NAME} --no-security           # only orchestration layer
+    npx ${PACKAGE_NAME}                # install in current directory
+    npx ${PACKAGE_NAME} ./my-project   # install in a specific project
+    npx ${PACKAGE_NAME} --mcp          # include MCP servers config
+    npx ${PACKAGE_NAME} --no-security  # only orchestration layer
 
   Stack installed:
     🧠 Planner    → Claude Sonnet 4.6   (Claude Pro)

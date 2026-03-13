@@ -1,5 +1,10 @@
 node_modules/
+.npm-cache/
 dist/
 *.js.map
 .DS_Store
 .claude/settings.local.json
+.multi-agent-cache/
+.multi-agent-checkpoints/
+.sr-*.json
+security-report-*.md

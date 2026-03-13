@@ -40,15 +40,44 @@ usage() {
   exit 0
 }
 
-for arg in "$@"; do
-  case "$arg" in
-    --help|-h)       usage ;;
-    --mcp)           INSTALL_MCP=true ;;
-    --no-security)   SKIP_SECURITY=true ;;
-    --profile)       shift; PROFILE="${1:-standard}" ;;
-    *)               [[ ! "$arg" =~ ^-- ]] && TARGET="$arg" ;;
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --help|-h)
+      usage
+      ;;
+    --mcp)
+      INSTALL_MCP=true
+      shift
+      ;;
+    --no-security)
+      SKIP_SECURITY=true
+      shift
+      ;;
+    --profile)
+      [[ $# -lt 2 || "$2" == --* ]] && { echo "❌ Missing value for --profile"; exit 1; }
+      PROFILE="$2"
+      shift 2
+      ;;
+    --target)
+      [[ $# -lt 2 || "$2" == --* ]] && { echo "❌ Missing value for --target"; exit 1; }
+      TARGET="$2"
+      shift 2
+      ;;
+    --*)
+      echo "❌ Unknown option: $1"
+      exit 1
+      ;;
+    *)
+      TARGET="$1"
+      shift
+      ;;
   esac
 done
+
+if [[ "$PROFILE" != "standard" && "$PROFILE" != "lite" ]]; then
+  echo "❌ Invalid profile: $PROFILE. Use 'standard' or 'lite'."
+  exit 1
+fi
 
 [[ ! -d "$TARGET" ]] && { echo "❌ Directory not found: $TARGET"; exit 1; }
 TARGET="$(cd "$TARGET" && pwd)"
@@ -80,7 +109,7 @@ mkdir -p "$TARGET/.claude/commands"
 
 # Append orchestration block to CLAUDE.md
 CLAUDE_TARGET="$TARGET/CLAUDE.md"
-MARKER="## Multi-Agent Orchestration Layer"
+MARKER="# Multi-Agent Orchestration Layer"
 
 if grep -q "$MARKER" "$CLAUDE_TARGET" 2>/dev/null; then
   warn "CLAUDE.md: orchestration already installed — skipping"
@@ -102,14 +131,14 @@ else
 fi
 
 # Pipeline skills
-for skill in plan code review report full-cycle; do
-  src="$SCRIPT_DIR/.claude/commands/$skill.md"
-  dest="$TARGET/.claude/commands/$skill.md"
+for src in "$SCRIPT_DIR"/.claude/commands/*.md; do
+  skill="$(basename "$src")"
+  dest="$TARGET/.claude/commands/$skill"
   if [[ -f "$dest" ]]; then
-    warn ".claude/commands/$skill.md already exists — skipping"
+    warn ".claude/commands/$skill already exists — skipping"
   else
     cp "$src" "$dest"
-    ok ".claude/commands/$skill.md"
+    ok ".claude/commands/$skill"
   fi
 done
 
@@ -135,6 +164,7 @@ echo "  📊 Reporter   → Gemini Flash        (Google One AI Premium)"
 echo "  🤖 Specialist → Codex o4-mini       (ChatGPT Plus/Pro)"
 echo ""
 echo "  Pipeline: /plan  /code  /review  /report  /full-cycle"
+echo "  Ops:      /checkpoint  /rollback  /roles  /lint  /security-review"
 echo "  Security: /sast-scan  /secrets-scan  /dependency-scan"
 echo "            /container-scan  /iac-scan  /threat-model  /fix-findings"
 echo ""

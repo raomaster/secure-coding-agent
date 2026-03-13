@@ -1,14 +1,14 @@
 ---
-description: "Reporte ejecutivo con el CLI configurado como 'reporter' en .multi-agent.json (default: Gemini Flash)"
+description: "Generate an executive report with the CLI configured as 'reporter' in .multi-agent.json (default: Gemini Flash)"
 ---
 
-Genera un reporte ejecutivo usando el CLI configurado como `reporter`:
+Generate an executive report using the CLI configured as `reporter`:
 
 $ARGUMENTS
 
-## Proceso
+## Process
 
-### 1. Lee la configuración del reporter
+### 1. Read the reporter configuration
 
 ```bash
 python3 -c "
@@ -22,52 +22,52 @@ print(f'Reporter CLI: {role[\"cli\"]} / model: {model_id}')
 "
 ```
 
-### 2. Recopila hallazgos
+### 2. Gather findings
 
-Lee los reportes existentes o el contexto de la sesión:
+Read existing reports or use the current session context:
+
 ```bash
-ls *-report.json security-report-*.md threat-model-*.md 2>/dev/null || echo "(usar hallazgos del contexto)"
+ls *-report.json security-report-*.md threat-model-*.md 2>/dev/null || echo "(use findings from the current context)"
 ```
 
-### 3. Genera el reporte según CLI configurado
+### 3. Generate the report using the configured CLI
 
-#### Si reporter = gemini (default: Flash)
+#### If reporter = gemini (default: Flash)
 
 ```bash
-cat [hallazgos] | gemini -m flash --yolo \
-  -p "Genera reporte ejecutivo en markdown:
+cat [findings] | gemini -m flash --yolo \
+  -p "Generate an executive markdown report:
 
 ## Executive Summary
-**Proyecto**: [detectar] | **Fecha**: $(date +%Y-%m-%d)
-**Estado**: 🔴 CRÍTICO | 🟠 ALTO | 🟡 MEDIO | 🟢 BAJO
+**Project**: [detect automatically] | **Date**: $(date +%Y-%m-%d)
+**Status**: CRITICAL | HIGH | MEDIUM | LOW
 
-### Resumen
-[2-3 líneas]
+### Summary
+[2-3 lines]
 
-### Top 3 Acciones Inmediatas
-1. **[hallazgo]** — Fix: [acción]
+### Top 3 Immediate Actions
+1. **[finding]** — Fix: [action]
 
-### Métricas
-- Hallazgos: CRITICAL: n · HIGH: n · MEDIUM: n · LOW: n
-- Deuda técnica: Xh
+### Metrics
+- Findings: CRITICAL: n · HIGH: n · MEDIUM: n · LOW: n
+- Technical debt: Xh
 
 ### Roadmap
-| Plazo | Scope | Esfuerzo |
-|-------|-------|----------|
-| Inmediato | CRITICAL | Xh |
+| Timeline | Scope | Effort |
+|----------|-------|--------|
+| Immediate | CRITICAL | Xh |
 | Sprint +1 | HIGH | Xh |"
 ```
 
-#### Si reporter = codex
+#### If reporter = codex
 
 ```bash
-codex -q "Generate executive security report in markdown from these findings: [hallazgos]"
+codex -q "Generate an executive security report in markdown from these findings: [findings]"
 ```
 
-### 4. Guarda el reporte
+### 4. Save the report
 
 ```bash
-# Guarda en el proyecto
 date_str=$(date +%Y%m%d)
-# Contenido del reporte → security-report-$date_str.md
+# Save the generated content as security-report-$date_str.md
 ```

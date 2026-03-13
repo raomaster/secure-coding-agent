@@ -106,5 +106,5 @@ export function printRoles(config: MultiAgentConfig): void {
         console.log(`  ${role.padEnd(12)} → ${cfg.cli} (${modelId})   [${cfg.subscription}]`);
     }
     console.log("\nTo change a role, edit .multi-agent.json");
-    console.log("Supported CLIs:", Object.keys({} as Record<CliName, unknown>).join(", "));
+    console.log("Supported CLIs:", Object.keys(config.cli_adapters).join(", "));
 }

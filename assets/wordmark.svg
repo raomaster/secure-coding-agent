@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="240" viewBox="0 0 960 240" fill="none">
+  <rect width="960" height="240" rx="24" fill="#0B1320"/>
+  <rect x="32" y="32" width="180" height="176" rx="20" fill="#10213A"/>
+  <path d="M88 88H156V108H108V140H148V160H108V192H88V88Z" fill="#74F0B0"/>
+  <path d="M450 96C485 96 511 116 519 145H490C483 130 469 122 450 122C420 122 399 143 399 176C399 209 420 230 450 230C469 230 483 222 490 207H519C511 236 485 256 450 256C405 256 372 223 372 176C372 129 405 96 450 96Z" fill="white"/>
+  <text x="248" y="108" fill="#74F0B0" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700">SECURITY-FIRST ORCHESTRATION FOR AI CODING WORKFLOWS</text>
+  <text x="248" y="164" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="56" font-weight="700">Secure Coding Agent</text>
+  <text x="248" y="198" fill="#B2C3D9" font-family="Arial, Helvetica, sans-serif" font-size="24">Claude • Gemini • Codex • checkpoints • review • rollback</text>

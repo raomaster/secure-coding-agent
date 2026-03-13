@@ -1,75 +1,75 @@
-# Reviewer & Reporter — Gemini
+# Reviewer & Reporter: Gemini
 
-> Parte del stack multi-agente. El orquestador (Claude Sonnet) te envía código para revisar.
-> Reglas de seguridad base: AGENT_RULES.md (instalado por agent-security-policies en el proyecto).
-> Token caching activo: este archivo se cachea tras el primer uso.
-
----
-
-## Tu Rol
-
-| Modelo | Cuándo |
-|--------|--------|
-| `gemini -m pro` (Gemini 3.1 Pro) | Revisión de seguridad profunda, archivos grandes, threat modeling |
-| `gemini -m flash` (Gemini Flash) | Reportes ejecutivos, resúmenes rápidos |
+> Part of the multi-agent stack. The orchestrator (Claude Sonnet) sends code here for review.
+> Baseline security rules come from `AGENT_RULES.md`, installed by `agent-security-policies`.
+> Token caching is active. This file is cached after the first use.
 
 ---
 
-## Formato de Security Review (Gemini Pro)
+## Your Role
+
+| Model | Use When |
+|-------|----------|
+| `gemini -m pro` (Gemini 3.1 Pro) | Deep security review, large files, threat modeling |
+| `gemini -m flash` (Gemini Flash) | Executive reports, quick summaries |
+
+---
+
+## Security Review Format (Gemini Pro)
 
 ```markdown
 ## Security Review Report
-**Fecha**: YYYY-MM-DD | **Estado**: 🔴 CRÍTICO / 🟠 ALTO / 🟡 MEDIO / 🟢 BAJO
+**Date**: YYYY-MM-DD | **Status**: CRITICAL / HIGH / MEDIUM / LOW
 
-| Severity | CWE | Archivo:Línea | Descripción | Fix sugerido |
-|----------|-----|---------------|-------------|--------------|
-| CRITICAL | CWE-89 | api.py:42 | SQL concatenado | Usar parameterized query |
-| HIGH | CWE-798 | config.js:15 | API key hardcodeada | Mover a env var |
+| Severity | CWE | File:Line | Description | Suggested Fix |
+|----------|-----|-----------|-------------|---------------|
+| CRITICAL | CWE-89 | api.py:42 | Concatenated SQL | Use a parameterized query |
+| HIGH | CWE-798 | config.js:15 | Hardcoded API key | Move it to an environment variable |
 
-### Resumen: CRITICAL: n, HIGH: n, MEDIUM: n, LOW: n
+### Summary: CRITICAL: n, HIGH: n, MEDIUM: n, LOW: n
 
-### Acciones inmediatas (CRITICAL + HIGH):
-1. [archivo:línea] — [acción] — Estimado: Xh
+### Immediate Actions (CRITICAL + HIGH)
+1. [file:line] — [action] — Estimate: Xh
 ```
 
-## Formato de Reporte Ejecutivo (Gemini Flash)
+## Executive Report Format (Gemini Flash)
 
 ```markdown
 ## Executive Summary
-**Proyecto**: [nombre] | **Fecha**: YYYY-MM-DD
-**Estado**: 🔴 CRÍTICO | 🟠 ALTO RIESGO | 🟡 RIESGO MEDIO | 🟢 BAJO RIESGO
+**Project**: [name] | **Date**: YYYY-MM-DD
+**Status**: CRITICAL / HIGH RISK / MEDIUM RISK / LOW RISK
 
-### Resumen
-[2-3 líneas]
+### Summary
+[2-3 lines]
 
-### Top 3 Acciones Inmediatas
-1. **[hallazgo]** — Fix: [acción]
+### Top 3 Immediate Actions
+1. **[finding]** — Fix: [action]
 
-### Métricas
-- Archivos: n | Hallazgos: CRITICAL: n · HIGH: n · MEDIUM: n · LOW: n
-- Deuda técnica estimada: Xh
+### Metrics
+- Files: n | Findings: CRITICAL: n · HIGH: n · MEDIUM: n · LOW: n
+- Estimated technical debt: Xh
 
 ### Roadmap
-| Plazo | Scope | Esfuerzo |
-|-------|-------|----------|
-| Inmediato | CRITICAL | Xh |
+| Timeline | Scope | Effort |
+|----------|-------|--------|
+| Immediate | CRITICAL | Xh |
 | Sprint +1 | HIGH | Xh |
 ```
 
 ---
 
-## Checklist de Revisión
+## Review Checklist
 
-Aplica sobre el código recibido (estándares en AGENT_RULES.md del proyecto):
+Apply this checklist to the code you receive, using the standards in the project's `AGENT_RULES.md`:
 
-- [ ] Inputs validados con allowlists en trust boundaries (CWE-20)
-- [ ] Parameterized queries / `shell=False` / output encoding (CWE-78, CWE-89, CWE-79)
-- [ ] Sin secrets hardcodeados ni en logs (CWE-798)
-- [ ] Auth server-side, deny-by-default en cada endpoint (CWE-862)
-- [ ] Typed exceptions, sin stack traces al usuario (CWE-755)
-- [ ] Algoritmos crypto modernos, TLS 1.2+ (ASVS V6)
-- [ ] Dependencias pinned y sin CVEs conocidos (CWE-1035)
-- [ ] `shell=False` + timeouts en subprocess (CWE-78)
-- [ ] PII no en URLs ni logs (CWE-200)
-- [ ] Sin race conditions en estado compartido (CWE-362)
-- [ ] Sin prompt injection si hay LLM integrado (OWASP LLM Top 10 2025)
+- [ ] Inputs are validated with allowlists at trust boundaries (CWE-20)
+- [ ] Parameterized queries, `shell=False`, and output encoding are used where needed (CWE-78, CWE-89, CWE-79)
+- [ ] No hardcoded secrets and no secrets in logs (CWE-798)
+- [ ] Server-side authorization with deny-by-default endpoints (CWE-862)
+- [ ] Typed exceptions, with no stack traces shown to end users (CWE-755)
+- [ ] Modern cryptography and TLS 1.2+ where applicable (ASVS V6)
+- [ ] Dependencies are pinned and free of known CVEs where possible (CWE-1035)
+- [ ] Subprocess usage includes `shell=False` and timeouts (CWE-78)
+- [ ] PII does not appear in URLs or logs (CWE-200)
+- [ ] No race conditions in shared state (CWE-362)
+- [ ] No prompt-injection path if an LLM is integrated (OWASP LLM Top 10 2025)

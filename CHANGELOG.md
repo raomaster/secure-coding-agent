@@ -8,6 +8,20 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ## [Unreleased]
 
+### Added
+
+- Architecture, design decision, compatibility, use-case, and walkthrough docs
+- Minimal example project for reproducible installation validation
+- CI workflow for build, test, and package verification
+- Local `verify` workflow for build + tests + package dry-run
+- Preview `/security-review` workflow
+
+### Changed
+
+- Repositioned the project around security-first AI coding orchestration
+- Rewrote the main README for global English-speaking technical audiences
+- Clarified stable vs preview capabilities in the public docs
+
 ---
 
 ## [0.1.0] — 2026-03-09

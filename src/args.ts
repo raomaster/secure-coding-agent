@@ -9,6 +9,14 @@ export interface InstallArgs {
     version: boolean;
 }
 
+function readOptionValue(argv: string[], index: number, option: string): string {
+    const value = argv[index + 1];
+    if (!value || value.startsWith("--")) {
+        throw new Error(`Missing value for ${option}.`);
+    }
+    return value;
+}
+
 export function parseArgs(argv: string[]): InstallArgs {
     const args: InstallArgs = {
         target: ".",
@@ -37,12 +45,14 @@ export function parseArgs(argv: string[]): InstallArgs {
                 args.skipSecurity = true;
                 break;
             case "--target":
-                args.target = argv[++i] ?? ".";
+                args.target = readOptionValue(argv, i, "--target");
+                i++;
                 break;
             case "--profile":
-                const profile = argv[++i];
+                const profile = readOptionValue(argv, i, "--profile");
                 if (profile === "lite" || profile === "standard") {
                     args.profile = profile;
+                    i++;
                 } else {
                     throw new Error(`Invalid profile: ${profile}. Use 'standard' or 'lite'.`);
                 }

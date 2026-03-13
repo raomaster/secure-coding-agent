@@ -86,24 +86,23 @@ export async function install(args: InstallArgs): Promise<void> {
 // ─── Layer 1: call npx agent-security-policies ───────────────────────
 function installSecurityLayer(targetDir: string, profile: string): void {
     const agents = SECURITY_AGENTS.join(",");
-    const cmd = [
-        "npx",
+    const cmdArgs = [
         "--yes",
         SECURITY_DEP,
         "--agent", agents,
         "--skills",
         "--profile", profile,
         "--target", targetDir,
-    ].join(" ");
+    ];
 
-    info(`Running: ${cmd}`);
+    info(`Running: npx ${cmdArgs.join(" ")}`);
 
     try {
-        child_process.execSync(cmd, { stdio: "inherit" });
+        child_process.execFileSync("npx", cmdArgs, { stdio: "inherit" });
         ok(`${SECURITY_DEP}: AGENT_RULES.md + agent configs + security skills`);
     } catch {
         throw new Error(
-            `Failed to run ${SECURITY_DEP}. Ensure Node.js >= 18 and npm access.\nCommand: ${cmd}`
+            `Failed to run ${SECURITY_DEP}. Ensure Node.js >= 18 and npm access.\nCommand: npx ${cmdArgs.join(" ")}`
         );
     }
 }
@@ -186,6 +185,7 @@ function printSummary(targetDir: string, args: InstallArgs): void {
     console.log("  🤖 Specialist → Codex o4-mini       (ChatGPT Plus/Pro)");
     console.log("");
     console.log("Pipeline skills: /plan  /code  /review  /report  /full-cycle");
+    console.log("Ops skills:      /checkpoint  /rollback  /roles  /lint  /security-review");
     if (!args.skipSecurity) {
         console.log("Security skills: /sast-scan  /secrets-scan  /dependency-scan");
         console.log("                 /container-scan  /iac-scan  /threat-model  /fix-findings");

@@ -1,6 +1,6 @@
-# Full DevSecOps Pipeline
+# Security-First AI Development Workflow
 
-Vision for the complete automated pipeline (v0.3.0). Shows where the project is heading.
+Longer-form workflow vision for Secure Coding Agent. This document describes how the project can evolve from the current stable core into a richer review and delivery system.
 
 ---
 

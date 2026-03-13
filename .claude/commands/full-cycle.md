@@ -1,96 +1,97 @@
 ---
-description: "Pipeline completo multi-agente con checkpoint automático: plan → code → review → report"
+description: "Full multi-agent pipeline with automatic checkpoint: plan -> code -> review -> report"
 ---
 
-Ejecuta el pipeline multi-agente completo con checkpoint automático:
+Run the full multi-agent pipeline with an automatic checkpoint:
 
 $ARGUMENTS
 
-## Stack actual
+## Current stack
 
-Lee `.multi-agent.json` para mostrar qué CLI usa cada rol:
+Read `.multi-agent.json` to show which CLI each role uses:
+
 ```bash
 python3 -c "
 import json
 with open('.multi-agent.json') as f: c = json.load(f)
 r = c['roles']
-print(f'  Planner   → {r[\"planner\"][\"cli\"]} ({r[\"planner\"][\"model\"]})')
-print(f'  Coder     → {r[\"coder\"][\"cli\"]} ({r[\"coder\"][\"model\"]})')
-print(f'  Reviewer  → {r[\"reviewer\"][\"cli\"]} ({r[\"reviewer\"][\"model\"]})')
-print(f'  Reporter  → {r[\"reporter\"][\"cli\"]} ({r[\"reporter\"][\"model\"]})')
-print(f'  Specialist→ {r[\"specialist\"][\"cli\"]} ({r[\"specialist\"][\"model\"]})')
+print(f'  Planner   -> {r[\"planner\"][\"cli\"]} ({r[\"planner\"][\"model\"]})')
+print(f'  Coder     -> {r[\"coder\"][\"cli\"]} ({r[\"coder\"][\"model\"]})')
+print(f'  Reviewer  -> {r[\"reviewer\"][\"cli\"]} ({r[\"reviewer\"][\"model\"]})')
+print(f'  Reporter  -> {r[\"reporter\"][\"cli\"]} ({r[\"reporter\"][\"model\"]})')
+print(f'  Specialist-> {r[\"specialist\"][\"cli\"]} ({r[\"specialist\"][\"model\"]})')
 "
 ```
 
-> Para cambiar el stack: `/roles` o edita `.multi-agent.json` directamente.
+> To change the stack, use `/roles` or edit `.multi-agent.json` directly.
 
 ---
 
 ## Pipeline
 
-### 🔒 Checkpoint inicial (automático)
+### Initial checkpoint (automatic)
 
 ```bash
 git add -A 2>/dev/null
 git stash push -m "mca-checkpoint: full-cycle-start-$(date +%Y%m%d-%H%M%S)" --include-untracked 2>/dev/null \
-  && echo "✅ Checkpoint creado — usa /rollback si el resultado no es correcto" \
-  || echo "⚠️  Proyecto sin git — considera crear backup manual"
+  && echo "Checkpoint created. Use /rollback if the result is wrong." \
+  || echo "Project is not using git. Consider creating a manual backup."
 ```
 
 ---
 
-### Fase 1 — Plan (Planner: Sonnet)
+### Phase 1: Plan (Planner: Sonnet)
 
-Exploro el codebase, identifico convenciones, creo plan de tareas atómicas.
+Explore the codebase, identify conventions, and create an atomic task plan.
 
-→ Ver `/plan` para el proceso detallado.
-
----
-
-### [PAUSA] Confirmación del plan
-
-Presento el plan completo:
-- Tareas y su orden (paralelas vs secuenciales)
-- CLIs que se usarán para cada fase
-- Checkpoint creado en: `git stash list | grep mca-checkpoint | head -1`
-
-¿Procedemos?
+See `/plan` for the detailed process.
 
 ---
 
-### Fase 2 — Code (Coder: ver `.multi-agent.json`)
+### Pause: plan confirmation
 
-Workers ejecutan las tareas. Tareas sin dependencias → paralelas.
+Present the full plan:
+- tasks and execution order (parallel vs sequential)
+- which CLIs will be used in each phase
+- the created checkpoint reference from `git stash list | grep mca-checkpoint | head -1`
 
-→ Ver `/code` para el proceso detallado.
-
-**Si el resultado no cumple lo esperado → `/rollback` inmediatamente.**
-
----
-
-### Fase 3 — Review (Reviewer: ver `.multi-agent.json`)
-
-Security review del código implementado: OWASP ASVS 5.0, CWE Top 25 2025.
-
-→ Ver `/review` para el proceso detallado.
-
-**Hallazgos CRITICAL → `/rollback` y replantear.**
+Wait for confirmation before proceeding.
 
 ---
 
-### Fase 4 — Report (Reporter: ver `.multi-agent.json`)
+### Phase 2: Code (Coder: see `.multi-agent.json`)
 
-Reporte ejecutivo del ciclo completo.
+Workers implement the tasks. Independent tasks can run in parallel.
 
-→ Ver `/report` para el proceso detallado.
+See `/code` for the detailed process.
+
+**If the result does not match the request, use `/rollback` immediately.**
 
 ---
 
-## Comandos de control
+### Phase 3: Review (Reviewer: see `.multi-agent.json`)
 
-| Situación | Comando |
+Run a security review of the implementation against OWASP ASVS 5.0 and CWE Top 25 2025.
+
+See `/review` for the detailed process.
+
+**If there are CRITICAL findings, roll back and rethink the approach.**
+
+---
+
+### Phase 4: Report (Reporter: see `.multi-agent.json`)
+
+Generate an executive summary of the full cycle.
+
+See `/report` for the detailed process.
+
+---
+
+## Control commands
+
+| Situation | Command |
 |-----------|---------|
-| Output incorrecto | `/rollback` |
-| Ver checkpoints | `git stash list \| grep mca-checkpoint` |
-| Cambiar un rol | `/roles set <rol> <cli> <model>` |
-| Checkpoint manual | `/checkpoint <etiqueta>` |
+| Incorrect output | `/rollback` |
+| List checkpoints | `git stash list \| grep mca-checkpoint` |
+| Change one role | `/roles set <role> <cli> <model>` |
+| Manual checkpoint | `/checkpoint <label>` |

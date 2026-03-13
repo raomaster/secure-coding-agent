@@ -1,11 +1,14 @@
 {
   "name": "secure-coding-agent",
   "version": "0.1.0",
-  "description": "Security-first AI agent workflow for subscription-based AI CLIs — Sonnet (Planner) · Haiku (Coder) · Gemini Pro (Reviewer) · Gemini Flash (Reporter) · Codex (Specialist).",
+  "description": "Security-first orchestration for AI coding agents across Claude Code, Gemini CLI, and Codex.",
   "keywords": [
     "secure-coding",
     "secure-development",
-    "agent-workflow",
+    "secure-ai-development",
+    "agent-orchestration",
+    "developer-tooling",
+    "appsec",
     "claude",
     "gemini",
     "codex",
@@ -34,13 +37,18 @@
     "dist/",
     "CLAUDE.md",
     "GEMINI.md",
+    ".multi-agent.json",
     ".claude/commands/",
     ".claude/settings.json"
   ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "prepublishOnly": "npm run build"
+    "test:unit": "node --test tests/*.test.js",
+    "test": "npm run build && npm run test:unit",
+    "pack:dry-run": "npm publish --dry-run --cache .npm-cache",
+    "verify": "npm test && npm run pack:dry-run",
+    "prepublishOnly": "npm test"
   },
   "engines": {
     "node": ">=18.0.0"

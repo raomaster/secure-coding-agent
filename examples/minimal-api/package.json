@@ -1,0 +1,9 @@
+{
+  "name": "secure-coding-agent-minimal-api",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js"
+  }
+}

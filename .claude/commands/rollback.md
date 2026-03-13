@@ -1,77 +1,66 @@
 ---
-description: "Revierte al checkpoint anterior — cancela cambios de agentes incorrectos"
+description: "Revert to a previous checkpoint"
 ---
 
-Revierte el proyecto al estado de un checkpoint anterior, descartando los cambios realizados por los agentes.
+Revert the project to a previous checkpoint and discard the changes produced after it.
 
-$ARGUMENTS (opcional: etiqueta o índice del checkpoint — sin argumento muestra la lista)
+$ARGUMENTS (optional: checkpoint label or index; with no argument, show the list)
 
-## Proceso
+## Process
 
-### 1. Lista los checkpoints disponibles
+### 1. List available checkpoints
 
 ```bash
-echo "=== Checkpoints disponibles ==="
+echo "=== Available checkpoints ==="
 
-# Git stash checkpoints
 if git rev-parse --is-inside-work-tree 2>/dev/null; then
   git stash list | grep "mca-checkpoint" | nl -v 0
 else
-  # File-based checkpoints
-  ls -lt .multi-agent-checkpoints/ 2>/dev/null | grep -v log.json || echo "(sin checkpoints)"
+  ls -lt .multi-agent-checkpoints/ 2>/dev/null | grep -v log.json || echo "(no checkpoints)"
 fi
 ```
 
-### 2. Confirma con el usuario
+### 2. Confirm with the user
 
-Muestra los cambios que se PERDERÁN con el rollback:
+Show the changes that will be lost:
 
 ```bash
-# En git: muestra qué archivos cambiarían
-git diff --stat 2>/dev/null || echo "(sin cambios pendientes en git)"
-
-# Archivos no trackeados que se eliminarían
+git diff --stat 2>/dev/null || echo "(no pending git changes)"
 git status --short 2>/dev/null | grep "^?" || true
 ```
 
-**Pide confirmación explícita** antes de ejecutar el rollback. Los cambios NO recuperables se pierden.
+Ask for explicit confirmation before rolling back. Non-recoverable changes will be lost.
 
-### 3a. Rollback git stash
+### 3a. Git stash rollback
 
 ```bash
-# Si $ARGUMENTS es un índice (ej: "0", "1")
-# → git stash apply stash@{N} o git stash pop stash@{N}
-
-# Rollback al checkpoint más reciente:
 git stash pop "stash@{0}"
 
-# Rollback a un checkpoint específico (por índice):
 STASH_IDX="${ARGUMENTS:-0}"
 git stash pop "stash@{$STASH_IDX}"
 
-echo "✅ Rollback completado al checkpoint: $(git stash list | head -1)"
+echo "Rollback completed to checkpoint: $(git stash list | head -1)"
 ```
 
-> **Nota**: `pop` restaura Y elimina el checkpoint. Usa `apply` si quieres restaurar pero conservar el checkpoint para referencia.
+> `pop` restores and removes the checkpoint. Use `apply` instead if you want to keep it.
 
-### 3b. Rollback por etiqueta
+### 3b. Roll back by label
 
 ```bash
-# Buscar checkpoint por etiqueta
 LABEL="$ARGUMENTS"
 STASH_REF=$(git stash list | grep "mca-checkpoint: $LABEL" | head -1 | cut -d: -f1)
 
 if [[ -n "$STASH_REF" ]]; then
   git stash pop "$STASH_REF"
-  echo "✅ Rollback a: $LABEL"
+  echo "Rolled back to: $LABEL"
 else
-  echo "❌ Checkpoint '$LABEL' no encontrado"
-  echo "   Checkpoints disponibles:"
+  echo "Checkpoint '$LABEL' was not found"
+  echo "Available checkpoints:"
   git stash list | grep "mca-checkpoint"
 fi
 ```
 
-### 3c. Rollback file-based (sin git)
+### 3c. File-based rollback (no git)
 
 ```bash
 BACKUP_DIR=".multi-agent-checkpoints/${ARGUMENTS:-$(ls -t .multi-agent-checkpoints/ | grep -v log.json | head -1)}"
@@ -81,26 +70,24 @@ rsync -a --delete \
   "$BACKUP_DIR/" \
   .
 
-echo "✅ Rollback desde: $BACKUP_DIR"
+echo "Rollback restored from: $BACKUP_DIR"
 ```
 
-### 4. Verifica el estado
+### 4. Verify the state
 
 ```bash
-git status 2>/dev/null || echo "Estado restaurado"
+git status 2>/dev/null || echo "State restored"
 echo ""
-echo "✅ Rollback completo. Estado del proyecto restaurado al checkpoint."
-echo "   Si el rollback no fue el correcto, hay más checkpoints disponibles:"
+echo "Rollback complete. Project state restored to the selected checkpoint."
+echo "If that was not the right checkpoint, more checkpoints may still be available:"
 git stash list | grep "mca-checkpoint" | head -5
 ```
 
-### 5. Siguiente paso
+### 5. Next step
 
-- Analiza por qué los agentes fallaron antes de reintentar
-- Ajusta el contexto o las instrucciones en `/plan`
-- Crea un nuevo checkpoint con `/checkpoint` antes de intentar de nuevo
-- Considera dividir la tarea en partes más pequeñas
+- Understand why the agents failed before retrying
+- Improve the context or instructions in `/plan`
+- Create a new checkpoint with `/checkpoint` before another attempt
+- Split the task into smaller pieces if needed
 
----
-
-> 💡 **Filosofía**: Hacer rollback es más barato que corregir errores con más prompts de AI. Cuando el output de los agentes no cumple con lo solicitado, **rollback primero, mejora el plan después**.
+> Rollback is usually cheaper than trying to repair bad AI output with additional prompts. Roll back first, improve the plan second.

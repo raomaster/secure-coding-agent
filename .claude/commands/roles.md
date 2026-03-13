@@ -1,16 +1,16 @@
 ---
-description: "Muestra y gestiona los roles del stack multi-agente — cambia qué CLI usa cada rol"
+description: "Show and manage the multi-agent role stack"
 ---
 
-Muestra la configuración actual de roles y permite cambiar qué CLI usa cada rol.
+Show the current role configuration and optionally change which CLI each role uses.
 
-$ARGUMENTS (opcional: "set <rol> <cli> <model>" para cambiar un rol)
+$ARGUMENTS (optional: "set <role> <cli> <model>")
 
-## Proceso
+## Process
 
-### Ver roles actuales
+### Show current roles
 
-Lee `.multi-agent.json` y muestra el stack actual:
+Read `.multi-agent.json` and display the active stack:
 
 ```bash
 cat .multi-agent.json | python3 -c "
@@ -19,30 +19,26 @@ config = json.load(sys.stdin)
 roles = config['roles']
 adapters = config['cli_adapters']
 
-print('\nStack multi-agente actual:\n')
+print('\nCurrent multi-agent stack:\n')
 for role, cfg in roles.items():
     cli = cfg['cli']
     model_alias = cfg['model']
     model_id = adapters.get(cli, {}).get('models', {}).get(model_alias, model_alias)
     sub = cfg['subscription']
-    print(f'  {role:<12} → {cli:<16} model: {model_id:<30} [{sub}]')
+    print(f'  {role:<12} -> {cli:<16} model: {model_id:<30} [{sub}]')
 
-print('\nCLIs disponibles:')
+print('\nAvailable CLIs:')
 for cli, adapter in adapters.items():
     print(f'  {cli:<18} {adapter[\"description\"]}')
 print()
 "
 ```
 
-### Cambiar un rol
+### Change a role
 
-Si $ARGUMENTS contiene "set <rol> <cli> <model>":
+If `$ARGUMENTS` contains `set <role> <cli> <model>`:
 
 ```bash
-# Ejemplo: /roles set coder codex o4-mini
-# Ejemplo: /roles set reviewer gemini flash
-# Ejemplo: /roles set coder opencode auto
-
 python3 << 'EOF'
 import json, sys
 
@@ -54,60 +50,52 @@ if len(args) >= 4 and args[0] == "set":
         config = json.load(f)
 
     if role not in config["roles"]:
-        print(f"❌ Rol desconocido: {role}")
-        print(f"   Roles válidos: {list(config['roles'].keys())}")
+        print(f"Unknown role: {role}")
+        print(f"Valid roles: {list(config['roles'].keys())}")
         sys.exit(1)
 
     if cli not in config["cli_adapters"]:
-        print(f"❌ CLI desconocido: {cli}")
-        print(f"   CLIs disponibles: {list(config['cli_adapters'].keys())}")
+        print(f"Unknown CLI: {cli}")
+        print(f"Available CLIs: {list(config['cli_adapters'].keys())}")
         sys.exit(1)
 
-    old = config["roles"][role]
+    old_cli = config["roles"][role]["cli"]
+    old_model = config["roles"][role]["model"]
     config["roles"][role]["cli"] = cli
     config["roles"][role]["model"] = model
 
     with open(".multi-agent.json", "w") as f:
         json.dump(config, f, indent=2)
 
-    print(f"✅ Rol '{role}' actualizado:")
-    print(f"   Antes: {old['cli']} ({old['model']})")
-    print(f"   Ahora: {cli} ({model})")
-    print(f"\n   Los skills de Claude Code (/code, /review, etc.) usarán el nuevo CLI automáticamente.")
+    print(f"Role '{role}' updated:")
+    print(f"  Before: {old_cli} ({old_model})")
+    print(f"  After : {cli} ({model})")
+    print("\nClaude Code skills such as /code and /review will use the new CLI automatically.")
 EOF
 ```
 
-## Comandos Rápidos
+## Quick commands
 
 ```bash
-# Ver configuración completa
 /roles
-
-# Cambiar coder a Codex (si tienes ChatGPT Plus)
 /roles set coder codex o4-mini
-
-# Cambiar reviewer a Gemini Flash (más rápido)
 /roles set reviewer gemini flash
-
-# Cambiar reviewer a Codex (segunda opinión OpenAI)
 /roles set reviewer codex o3
-
-# Volver a Haiku como coder
 /roles set coder claude haiku
 ```
 
-## Cómo los Skills Usan Esta Config
+## How the skills use this config
 
-Todos los skills de pipeline (`/code`, `/review`, `/report`) leen `.multi-agent.json` para construir el comando correcto.
+All pipeline skills (`/code`, `/review`, `/report`) read `.multi-agent.json` to build the correct command dynamically.
 
-Al cambiar un rol aquí → todos los skills se adaptan automáticamente sin editar ningún archivo adicional.
+Changing a role here updates all dependent skills without any further file edits.
 
-## Compatibilidad de CLIs por Rol
+## CLI compatibility by role
 
-| CLI | Coder | Reviewer | Reporter | Notas |
+| CLI | Coder | Reviewer | Reporter | Notes |
 |-----|-------|----------|----------|-------|
-| `claude` | ✅ haiku/sonnet | ❌ | ❌ | Requiere `CLAUDECODE=` para spawn |
-| `gemini` | ❌ | ✅ pro | ✅ flash | 2M ctx, token caching |
-| `codex` | ✅ o4-mini/o3 | ✅ o3 | ❌ | ChatGPT Plus/Pro |
-| `github-copilot` | ⚠️ limitado | ❌ | ❌ | Solo sugerencias de shell |
-| `opencode` | ✅ auto | ❌ | ❌ | Requiere suscripción opencode.ai |
+| `claude` | yes, haiku/sonnet | no | no | Requires `CLAUDECODE=` for spawning |
+| `gemini` | no | yes, pro | yes, flash | 2M context, token caching |
+| `codex` | yes, o4-mini/o3 | yes, o3 | no | ChatGPT Plus/Pro |
+| `github-copilot` | limited | no | no | Shell suggestions only |
+| `opencode` | yes, auto | no | no | Requires an opencode.ai subscription |

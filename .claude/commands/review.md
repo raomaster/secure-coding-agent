@@ -1,83 +1,145 @@
 ---
-description: "Fase 4: Security review con el CLI configurado como 'reviewer' en .multi-agent.json (default: Gemini 3.1 Pro)"
+description: "Phase 4: AI security review using the reviewer configured in .multi-agent.json"
 ---
 
-Ejecuta revisión de seguridad usando el CLI configurado como `reviewer`:
+Run a security review with the reviewer configured in `.multi-agent.json`:
 
-$ARGUMENTS (archivos a revisar — sin argumento usa los modificados recientemente)
+$ARGUMENTS (files to review; with no argument, use files changed since the last commit)
 
-## Proceso
+## Process
 
-### 1. Lee la configuración del reviewer
+### 1. Read the reviewer configuration
 
 ```bash
-python3 -c "
+python3 << 'EOF'
 import json
+
 with open('.multi-agent.json') as f:
     config = json.load(f)
+
+role    = config['roles']['reviewer']
+adapter = config['cli_adapters'][role['cli']]
+model   = adapter['models'].get(role['model'], role['model'])
+cli     = role['cli']
+
+print(f"Reviewer : {cli} / {model}  [{role['subscription']}]")
+EOF
+```
+
+### 2. Identify files
+
+```bash
+rm -f .review-files.tmp .review-prompt.tmp
+
+if [[ -n "$ARGUMENTS" ]]; then
+  SCOPE="$ARGUMENTS"
+elif git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  SCOPE="$(git diff --name-only HEAD 2>/dev/null | tr '\n' ' ')"
+  [[ -z "$SCOPE" ]] && SCOPE="$(git diff --name-only --cached 2>/dev/null | tr '\n' ' ')"
+  [[ -z "$SCOPE" ]] && SCOPE="."
+else
+  SCOPE="."
+fi
+
+for entry in $SCOPE; do
+  if [[ -f "$entry" ]]; then
+    printf "%s\n" "$entry" >> .review-files.tmp
+  elif [[ -d "$entry" ]]; then
+    find "$entry" -type f \
+      -not -path '*/.git/*' \
+      -not -path '*/node_modules/*' \
+      -not -path '*/dist/*' >> .review-files.tmp
+  fi
+done
+
+sort -u .review-files.tmp -o .review-files.tmp 2>/dev/null || true
+
+if [[ ! -s .review-files.tmp ]]; then
+  echo "No files found for review"
+  rm -f .review-files.tmp
+  exit 0
+fi
+
+echo "Files to review:"
+sed -n '1,20p' .review-files.tmp
+```
+
+### 3. Run the review
+
+```bash
+eval "$(python3 << 'EOF'
+import json, shlex
+
+with open('.multi-agent.json') as f:
+    config = json.load(f)
+
 role = config['roles']['reviewer']
 adapter = config['cli_adapters'][role['cli']]
-model_id = adapter['models'].get(role['model'], role['model'])
-print(f'Reviewer CLI: {role[\"cli\"]}')
-print(f'Model: {model_id}')
-print(f'Subscription: {role[\"subscription\"]}')
-"
-```
+model = adapter['models'].get(role['model'], role['model'])
 
-### 2. Identifica archivos a revisar
+print(f"REVIEWER_CLI={shlex.quote(role['cli'])}")
+print(f"REVIEWER_MODEL={shlex.quote(model)}")
+EOF
+)"
 
-```bash
-# Si no se especifican en $ARGUMENTS:
-git diff --name-only HEAD 2>/dev/null || git status --short 2>/dev/null | awk '{print $2}'
-```
+cat > .review-prompt.tmp <<'EOF'
+You are a senior security engineer. Review this code against:
+- OWASP ASVS 5.0 (V2 Auth, V3 Session, V4 Access Control, V5 Input Validation, V6 Crypto)
+- CWE/SANS Top 25 2025
+- NIST SSDF 1.1
 
-### 3. Ejecuta el review según CLI configurado
-
-#### Si reviewer = gemini (default: 3.1 Pro)
-
-```bash
-cat [archivos] | gemini -m pro --yolo \
-  -p "Eres senior security engineer. Revisa según OWASP ASVS 5.0, CWE Top 25 2025, NIST SSDF.
-
-Formato:
+Response format:
 ## Security Review Report
-| Severity | CWE | Archivo:Línea | Descripción | Fix sugerido |
-|----------|-----|---------------|-------------|--------------|
+| Severity | CWE | File:Line | Description | Suggested Fix |
+|----------|-----|-----------|-------------|---------------|
 
-### Resumen: CRITICAL: n, HIGH: n, MEDIUM: n, LOW: n
+### Summary: CRITICAL: n, HIGH: n, MEDIUM: n, LOW: n
 
-### Acciones inmediatas (CRITICAL + HIGH):
-1. [archivo:línea] — [acción] — Estimado: Xh"
+### Immediate Actions (CRITICAL + HIGH)
+1. [file:line] — [concrete action] — Estimate: Xh
+EOF
 
-# Archivo grande (> 2000 líneas) — Gemini tiene 2M token context:
-cat [archivo_grande] | gemini -m pro --yolo -p "Security review: [aspecto específico]"
+case "$REVIEWER_CLI" in
+  gemini)
+    while IFS= read -r file; do
+      printf '\n===== %s =====\n' "$file"
+      cat "$file"
+    done < .review-files.tmp | gemini -m "$REVIEWER_MODEL" --yolo -p "$(cat .review-prompt.tmp)"
+    ;;
+  codex)
+    {
+      cat .review-prompt.tmp
+      printf '\n\nFiles:\n'
+      while IFS= read -r file; do
+        printf '\n===== %s =====\n' "$file"
+        cat "$file"
+      done < .review-files.tmp
+    } > .review-input.tmp
+    codex -q "$(cat .review-input.tmp)"
+    rm -f .review-input.tmp
+    ;;
+  claude)
+    echo "Reviewer is set to Claude. Perform the review in the current session using Read on .review-files.tmp."
+    ;;
+  *)
+    echo "Unsupported reviewer.cli for /review: $REVIEWER_CLI"
+    ;;
+esac
+
+rm -f .review-files.tmp .review-prompt.tmp
 ```
 
-#### Si reviewer = codex
+### 4. Triage
 
-```bash
-codex -q "Security review of these files per OWASP ASVS 5.0 and CWE Top 25 2025.
-Report format: | Severity | CWE | File:Line | Description | Fix |
-Files: [lista]"
-```
+| Severity | Action |
+|----------|--------|
+| CRITICAL | Use `/rollback` if the code came from agents and rethink the approach |
+| HIGH | Use `/fix-findings` before continuing |
+| MEDIUM | Create an issue for the next sprint |
+| LOW/INFO | Document it in `SECURITY_DECISIONS.md` |
 
-#### Si reviewer = claude (modo fallback)
+### 5. Next step
 
-```bash
-# Revisar directamente como Sonnet en la sesión actual
-# (solo cuando Gemini/Codex no estén disponibles)
-```
-
-### 4. Procesa hallazgos
-
-| Severidad | Acción |
-|-----------|--------|
-| CRITICAL | Rollback si el código implementó algo peligroso → `/rollback`, luego replanificar |
-| HIGH | Fix en este sprint → `/fix-findings` |
-| MEDIUM | Issue para próximo sprint |
-| LOW/INFO | Documentar en `SECURITY_DECISIONS.md` |
-
-### 5. Siguiente paso
-
-- Hallazgos CRITICAL/HIGH → `/fix-findings` o `/rollback` si son graves
-- Sin hallazgos críticos → `/report`
+- CRITICAL or HIGH findings -> `/fix-findings` or `/rollback`
+- No critical findings -> `/report`
+- For deeper review (SAST + secrets + deps + AI) -> `/security-review`

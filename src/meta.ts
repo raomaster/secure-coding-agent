@@ -19,6 +19,8 @@ export const PIPELINE_SKILLS = [
     "checkpoint",
     "rollback",
     "roles",
+    "lint",
+    "security-review",
 ] as const;
 
-export const ORCHESTRATION_MARKER = "## Multi-Agent Orchestration Layer";
+export const ORCHESTRATION_MARKER = "# Multi-Agent Orchestration Layer";

@@ -1,54 +1,56 @@
 ---
-description: "Fase 1+2: Research del codebase + plan estructurado de tareas para workers Haiku"
+description: "Phase 1+2: Research the codebase and create a structured task plan for workers"
 ---
 
-Analiza el siguiente requerimiento y crea un plan de implementación:
+Analyze the following request and create an implementation plan:
 
 $ARGUMENTS
 
-## Proceso
+## Process
 
 ### 1. Research
-Explora el codebase con tus herramientas antes de planificar:
-- `Glob` para encontrar archivos relevantes
-- `Grep` para patrones existentes, convenciones, tipos, interfaces
-- `Read` para entender implementaciones similares
-- Agent tool con `subagent_type="Explore"` si el repo es grande
 
-### 2. Preguntas Clarificadoras
-Antes de crear el plan, identifica ambigüedades:
-- ¿Qué comportamiento exacto se espera en edge cases?
-- ¿Hay restricciones de performance, compatibilidad o breaking changes?
-- ¿Qué archivos NO deben modificarse?
-- ¿Hay trust boundaries nuevos que analizar?
+Explore the codebase before planning:
+- use `Glob` to find relevant files
+- use `Grep` to detect existing patterns, conventions, types, and interfaces
+- use `Read` to understand similar implementations
+- use the Agent tool with `subagent_type=\"Explore\"` if the repository is large
 
-Presenta las preguntas y espera respuesta antes de continuar.
+### 2. Clarifying questions
 
-### 3. Plan Estructurado
+Before writing the plan, identify the ambiguous parts:
+- What exact behavior is expected in edge cases?
+- Are there performance, compatibility, or breaking-change constraints?
+- Which files must not be modified?
+- Are there new trust boundaries to analyze?
 
-Divide en tareas atómicas con este formato:
+Present the questions and wait for answers before continuing.
 
+### 3. Structured plan
+
+Break the work into atomic tasks using this format:
+
+```text
+TASK 1: [descriptive title]
+- Description: [exactly what to do]
+- Files to modify: [complete list]
+- Dependencies: none | Task N
+- Can run in parallel with: Task N | none
+- Context for the worker: [what the worker must know]
+- Definition of done: [verifiable success criteria]
+
+TASK 2: ...
 ```
-TAREA 1: [título descriptivo]
-- Descripción: [qué hacer exactamente]
-- Archivos a modificar: [lista completa]
-- Dependencias: ninguna | Tarea N
-- Paralela con: Tarea N | ninguna (no tocan los mismos archivos)
-- Contexto para Haiku: [qué información necesita el worker]
-- Definición de done: [criterio verificable]
 
-TAREA 2: ...
-```
+### 4. Initial security analysis
 
-### 4. Análisis de Seguridad Inicial
+Identify these concerns before implementation:
+- Are there new trust boundaries?
+- Are there external inputs from users, APIs, or files?
+- Does the change create new attack surfaces?
+- Is `/threat-model` needed because of the architecture change?
 
-Identifica antes de implementar:
-- ¿Hay nuevos trust boundaries?
-- ¿Se manejan inputs externos (usuario, API, archivo)?
-- ¿Se crean nuevas superficies de ataque?
-- ¿Se necesita `/threat-model` por cambios arquitectónicos?
+### 5. Confirmation
 
-### 5. Confirmación
-
-Presenta el plan completo y espera aprobación antes de ejecutar.
-Sugiere usar `/code` para implementar o `/full-cycle` para el pipeline completo.
+Present the full plan and wait for approval before execution.
+Suggest `/code` for implementation or `/full-cycle` for the complete workflow.

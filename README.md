@@ -1,195 +1,275 @@
 # Secure Coding Agent
 
-Capa de orquestación multi-agente para suscripciones de AI — sin API keys.
+![Secure Coding Agent wordmark](https://raw.githubusercontent.com/raomaster/secure-coding-agent/main/assets/wordmark.svg)
 
-Funciona **sobre** [agent-security-policies](https://github.com/raomaster/agent-security-policies/tree/feature/cli), añadiendo el pipeline de roles encima de las reglas de seguridad.
+[![CI](https://github.com/raomaster/secure-coding-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/raomaster/secure-coding-agent/actions/workflows/ci.yml)
+![Node >=18](https://img.shields.io/badge/node-%3E%3D18-339933?logo=node.js&logoColor=white)
+![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![Status v0.1](https://img.shields.io/badge/status-v0.1%20stable-0a7f5a)
 
-```
-Capa 1: npx agent-security-policies  →  AGENT_RULES.md + CLAUDE.md + AGENTS.md + skills de seguridad
-Capa 2: npx secure-coding-agent      →  orquestación multi-agente + GEMINI.md + skills de pipeline
-```
+**A security-first orchestration layer for AI coding agents.**
 
----
+Secure Coding Agent turns subscription-based coding CLIs into a structured secure development workflow with planning, implementation, review, reporting, and rollback built in.
 
-## Stack
+- Coordinate **Claude, Gemini, and Codex** through explicit roles instead of ad hoc prompting.
+- Keep security **inside the development workflow**, not as a disconnected afterthought.
+- Install a reproducible workflow with **config, commands, checkpoints, CI validation, and docs**.
 
-| Rol | Modelo | Suscripción | Archivo de instrucciones |
-|-----|--------|-------------|--------------------------|
-| 🧠 **Planner** | Claude Sonnet 4.6 | Claude Pro | `CLAUDE.md` (auto-cargado) |
-| ⚡ **Coder** | Claude Haiku 4.5 | Claude Pro | `CLAUDE.md` (spawned) |
-| 🔍 **Reviewer** | Gemini 3.1 Pro | Google One AI Premium | `GEMINI.md` (auto-cargado) |
-| 📊 **Reporter** | Gemini Flash | Google One AI Premium | `GEMINI.md` (auto-cargado) |
-| 🤖 **Specialist** | Codex o4-mini | ChatGPT Plus/Pro | `AGENTS.md` (auto-cargado) |
+## Why this exists
 
----
+AI-assisted development is productive, but the default workflow is still weak:
 
-## Instalación
+- prompts are inconsistent
+- model roles are implicit
+- security review is often bolted on too late
+- rollback and reproducibility are usually missing
 
-### Prerequisitos
+Secure Coding Agent exists to answer a specific problem:
+
+> How do you turn AI coding CLIs into a disciplined, security-aware workflow that is usable by real engineers?
+
+This project treats AI-assisted development as a systems problem:
+- role orchestration
+- safe defaults
+- reproducible installation
+- policy-aware review
+- explicit operational boundaries
+
+## Quickstart
+
+Run it from the root of the project you want to bootstrap:
 
 ```bash
-# Claude Code (Claude Pro)
+npx secure-coding-agent
+```
+
+Install into a different project without changing directory:
+
+```bash
+npx secure-coding-agent /path/to/project
+```
+
+## What you get
+
+Secure Coding Agent installs a two-layer workflow:
+
+```text
+Layer 1: npx agent-security-policies  -> security rules, policies, baseline agent guidance
+Layer 2: npx secure-coding-agent      -> orchestration, role config, pipeline commands
+```
+
+Core roles:
+
+| Role | Default CLI / model | Responsibility |
+|---|---|---|
+| Planner | Claude Sonnet 4.6 | Research, decomposition, orchestration |
+| Coder | Claude Haiku 4.5 | Implementation workers |
+| Reviewer | Gemini 3.1 Pro | Security review |
+| Reporter | Gemini Flash | Executive reporting |
+| Specialist | Codex o4-mini | Second opinion / complex problem solving |
+
+## How it works
+
+```mermaid
+flowchart TD
+    A["Developer request"] --> B["/plan<br/>Planner"]
+    B --> C["Task breakdown<br/>and security surface analysis"]
+    C --> D["/code<br/>Coder workers"]
+    D --> E["Checkpoint + rollback safety"]
+    E --> F["/review<br/>Reviewer"]
+    F --> G["/report<br/>Reporter"]
+    G --> H["Decision-ready output"]
+```
+
+Key design choices:
+
+- **Role-driven orchestration**: each model has a defined job
+- **Config-driven runtime**: `.multi-agent.json` controls CLIs and models
+- **Rollback-first safety**: agent output can be reverted cheaply
+- **Security-first workflow**: review is part of delivery, not a separate ritual
+
+## Stable today
+
+These flows are part of the current `v0.1.x` stable surface:
+
+- `npx secure-coding-agent`
+- positional target path support
+- `.multi-agent.json` installation and role configuration
+- `/plan`, `/code`, `/review`, `/report`, `/full-cycle`
+- `/checkpoint`, `/rollback`, `/roles`
+- TypeScript installer + bash installer
+- `npm run verify`
+- CI validation on GitHub Actions
+
+## Experimental today
+
+These capabilities are intentionally shipped as **preview / evolving workflows**:
+
+- `/lint`
+- `/security-review`
+- advanced cache-driven review flows described in the roadmap
+- deeper MCP-based shared context and scanner orchestration
+
+The goal is to keep the core reliable while higher-value workflows mature in public.
+
+## Who this is for
+
+Secure Coding Agent is built for:
+
+- engineers using AI coding tools who want a more disciplined workflow
+- AppSec / product security engineers experimenting with agent-assisted delivery
+- engineering leads who want reproducible AI workflows instead of prompt folklore
+- builders creating internal tooling around secure AI development
+
+It is **not** positioned as:
+
+- a generic “AI wrapper”
+- a replacement for your existing CI/CD platform
+- a fully autonomous software factory
+
+## What makes it different
+
+Most AI coding tools optimize for raw generation speed.
+
+Secure Coding Agent optimizes for:
+
+- **security-aware execution**
+- **role governance across models**
+- **structured review and reporting**
+- **operational reproducibility**
+- **installation into existing repos, not only greenfield repositories**
+
+The differentiator is not “more models”.
+The differentiator is **security-first orchestration for AI coding workflows**.
+
+## Proof
+
+This repository includes the artifacts needed to evaluate the project as a serious engineering system:
+
+- [Architecture](docs/architecture.md)
+- [Design Decisions](docs/design-decisions.md)
+- [Use Cases](docs/use-cases.md)
+- [Compatibility Policy](docs/compatibility.md)
+- [Skills Reference](docs/skills-reference.md)
+- [Usage Walkthrough](docs/usage-walkthrough.md)
+- [Example Project](examples/minimal-api/README.md)
+
+Validation:
+
+```bash
+npm run verify
+```
+
+That runs:
+- build
+- unit and installer tests
+- package dry-run
+
+## Compatibility
+
+Supported baseline:
+
+- Node.js `>=18`
+- macOS and Linux are validated in CI
+- Windows/WSL is roadmap-level support, not yet first-class
+
+Required CLIs depend on the workflow you want:
+
+| Capability | Requirement |
+|---|---|
+| Orchestration install | Node.js + npm |
+| Full security layer | `agent-security-policies` install path via `npx` |
+| Claude role execution | `@anthropic-ai/claude-code` |
+| Gemini review/reporting | `@google/gemini-cli` |
+| Codex specialist role | `@openai/codex` |
+
+See [docs/compatibility.md](docs/compatibility.md) for explicit behavior and limitations.
+
+## Commands
+
+### Stable workflow commands
+
+| Command | Purpose |
+|---|---|
+| `/plan` | Explore the codebase and produce a structured implementation plan |
+| `/code` | Delegate implementation to the configured coder |
+| `/review` | Run AI security review with the configured reviewer |
+| `/report` | Generate executive output from findings |
+| `/full-cycle` | Execute the end-to-end workflow |
+| `/checkpoint` | Create a manual safety checkpoint |
+| `/rollback` | Restore a previous checkpoint |
+| `/roles` | Show or change role assignments |
+
+### Preview commands
+
+| Command | Purpose |
+|---|---|
+| `/lint` | Run language-aware linting |
+| `/security-review` | Run a broader static + AI review workflow |
+
+## Installation details
+
+### Prerequisites
+
+```bash
+# Claude Code
 npm i -g @anthropic-ai/claude-code
 
-# Gemini CLI (Google One AI Premium)
+# Gemini CLI
 npm i -g @google/gemini-cli
 gemini auth login
 
-# Codex CLI (ChatGPT Plus)
+# Codex CLI
 npm i -g @openai/codex
-codex  # → "Sign in with ChatGPT"
+codex
 ```
 
-### Desde npm
+### From npm
 
 ```bash
-# Ejecutar sin instalar globalmente
-npx secure-coding-agent --target /path/to/tu-proyecto
+# Run in the current project
+npx secure-coding-agent
 
-# O instalar globalmente
+# Install globally if preferred
 npm i -g secure-coding-agent
-secure-coding-agent --target /path/to/tu-proyecto
+secure-coding-agent
+
+# Advanced: install into another project
+npx secure-coding-agent /path/to/project
 ```
 
-### Desde el repo
+### From source
 
 ```bash
 git clone https://github.com/raomaster/secure-coding-agent.git
 cd secure-coding-agent
-
-# Instala ambas capas en el proyecto
-./install.sh /path/to/tu-proyecto
-
-# Con MCP servers (filesystem + memory)
-./install.sh --mcp /path/to/tu-proyecto
-
-# Solo capa de orquestación (si ya tienes agent-security-policies instalado)
-./install.sh --no-security /path/to/tu-proyecto
+npm install
+npm run verify
 ```
 
-### Qué instala cada capa
+### What gets installed
 
-**Capa 1** (`npx agent-security-policies --agent claude,codex,antigravity --skills`):
-- `AGENT_RULES.md` — reglas de seguridad completas (OWASP ASVS 5.0, CWE Top 25, NIST SSDF)
-- `CLAUDE.md` — instrucciones de seguridad para Claude
-- `AGENTS.md` — instrucciones de seguridad para Codex
-- `.agent/rules/security.md` — reglas para Gemini (formato antigravity)
-- `.claude/commands/` — 7 skills de seguridad: `/sast-scan`, `/secrets-scan`, `/dependency-scan`, `/container-scan`, `/iac-scan`, `/threat-model`, `/fix-findings`
-- `policies/` — YAML: owasp_asvs.yaml, cwe_top25.yaml, llm_security.yaml, owasp_masvs.yaml
+Layer 2 from this package installs:
 
-**Capa 2** (este repo):
-- `CLAUDE.md` ← **append**: protocolo de orquestación multi-agente
-- `GEMINI.md` — rol de reviewer/reporter (no existe en capa 1)
-- `.claude/commands/plan.md` — pipeline: Fase 1+2 research + plan
-- `.claude/commands/code.md` — pipeline: Fase 3 delegar a Haiku
-- `.claude/commands/review.md` — pipeline: Fase 4 revisión Gemini Pro
-- `.claude/commands/report.md` — reporte ejecutivo Gemini Flash
-- `.claude/commands/full-cycle.md` — pipeline completo end-to-end
+- `CLAUDE.md` orchestration layer
+- `GEMINI.md` reviewer / reporter guidance
+- `.multi-agent.json` role configuration
+- `.claude/commands/*` command set
+- optional `.claude/settings.json` for MCP
 
----
+## Roadmap
 
-## Cómo Funciona el Pipeline
+Near-term roadmap:
 
-```
-Tu petición en Claude Code
-         ↓
-  /full-cycle "implementar X"
-         ↓
-  Sonnet 4.6 — Planner
-  ├── Explora codebase (Glob/Grep/Read)
-  ├── Hace preguntas clarificadoras
-  └── Crea plan de tareas atómicas
-         ↓
-  [confirmación del usuario]
-         ↓
-  Haiku 4.5 × N — Coder (workers paralelos)
-  └── CLAUDECODE= claude --model haiku --print ...
-         ↓
-  Gemini 3.1 Pro — Reviewer
-  └── cat archivos | gemini -m pro --yolo -p "security review..."
-         ↓
-  Gemini Flash — Reporter
-  └── echo hallazgos | gemini -m flash --yolo -p "executive report..."
-```
+- cache-aware review to reduce repeated AI review cost
+- clearer stable vs preview command contracts
+- deeper reviewer / reporter command generation from config
+- MCP-backed shared memory and scanner orchestration
+- CI-native review workflows and artifacts
 
-### Por qué Haiku para código
+See [ROADMAP.md](ROADMAP.md) for the full progression.
 
-- Mucho más barato en Claude Pro que Sonnet
-- Workers paralelos con contexto limpio = no contamina la sesión principal
-- Ideal para tasks bien definidas con contexto completo
+## Credits
 
-### Por qué Gemini para revisión
-
-- 2M token context = analiza codebases completos
-- Token caching activo = `GEMINI.md` + `AGENT_RULES.md` se cachean
-- Perspectiva independiente de Claude
-
----
-
-## Skills Disponibles en Claude Code
-
-### Pipeline Multi-Agente (este repo)
-| Comando | Descripción |
-|---------|-------------|
-| `/plan` | Research del codebase + plan estructurado de tareas |
-| `/code` | Delegar implementación a Haiku worker(s) |
-| `/review` | Security review con Gemini 3.1 Pro |
-| `/report` | Reporte ejecutivo con Gemini Flash |
-| `/full-cycle` | Pipeline completo plan→code→review→report |
-
-### Seguridad (agent-security-policies)
-| Comando | Herramienta |
-|---------|-------------|
-| `/sast-scan` | Semgrep — vulnerabilidades CWE en código |
-| `/secrets-scan` | Gitleaks — credentials hardcodeadas |
-| `/dependency-scan` | Trivy fs — CVEs en dependencias |
-| `/container-scan` | Trivy image — CVEs en Docker |
-| `/iac-scan` | KICS — misconfigs Terraform/K8s/etc. |
-| `/threat-model` | Gemini Pro — STRIDE threat modeling |
-| `/fix-findings` | Remediación de hallazgos |
-
----
-
-## Estructura de Este Repo
-
-```
-secure-coding-agent/
-├── CLAUDE.md                  # Append: protocolo de orquestación multi-agente
-├── GEMINI.md                  # Rol reviewer/reporter para Gemini CLI
-├── install.sh                 # Instala ambas capas en cualquier proyecto
-├── .claude/
-│   ├── settings.json          # MCP: filesystem + memory (con --mcp)
-│   └── commands/              # Solo skills de pipeline (seguridad → agent-security-policies)
-│       ├── plan.md
-│       ├── code.md
-│       ├── review.md
-│       ├── report.md
-│       └── full-cycle.md
-└── README.md
-```
-
----
-
-## MCP (Model Context Protocol)
-
-Con `--mcp`, se instala `.claude/settings.json` con:
-- **filesystem** MCP server — operaciones de archivo mejoradas
-- **memory** MCP server — memoria compartida entre sesiones de agentes
-
-Tanto Claude Code como Gemini CLI son clientes MCP — puedes agregar servidores MCP adicionales para compartir contexto entre agentes.
-
----
-
-## Próximos Pasos / Roadmap
-
-- [ ] MCP server de seguridad (wrapping Semgrep/Trivy/Gitleaks) para Gemini y Claude
-- [ ] Soporte para Codex CLI más profundo cuando madure su MCP
-- [ ] GitHub Actions workflow usando el stack completo
-- [ ] Cache compartido entre agentes via MCP memory server
-
----
-
-## Créditos
-
-- Security policies: [agent-security-policies](https://github.com/raomaster/agent-security-policies)
-- Orquestación basada en el approach de [shuttle.dev con Haiku 4.5](https://www.shuttle.dev/blog/2025/10/23/using-haiku-4.5-agents)
+- Security policies foundation: [agent-security-policies](https://github.com/raomaster/agent-security-policies)
+- Workflow inspiration from role-specialized coding agent systems and practical secure development pipelines

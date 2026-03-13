@@ -1,40 +1,39 @@
 ---
-description: "Crea un checkpoint del estado actual — úsalo ANTES de que los agentes modifiquen archivos"
+description: "Create a checkpoint before agents modify files"
 ---
 
-Crea un checkpoint del estado actual del proyecto para poder hacer `/rollback` si los cambios de los agentes son incorrectos.
+Create a checkpoint of the current project state so you can use `/rollback` if an agent produces the wrong result.
 
-$ARGUMENTS (opcional: etiqueta descriptiva del checkpoint, ej: "antes-de-refactor-auth")
+$ARGUMENTS (optional descriptive label, for example: "before-auth-refactor")
 
-## Proceso
+## Process
 
-### 1. Verifica si es un repo git
+### 1. Check whether this is a git repository
 
 ```bash
 git rev-parse --is-inside-work-tree 2>/dev/null && echo "GIT" || echo "NO_GIT"
 ```
 
-### 2a. Repo git → git stash (preferido)
+### 2a. Git repository -> git stash (preferred)
 
-El stash no contamina el historial git. Múltiples checkpoints apilados.
+This keeps checkpoints out of commit history and allows stacking multiple checkpoints.
 
 ```bash
 LABEL="${ARGUMENTS:-$(date +%Y%m%d-%H%M%S)}"
 git add -A
 git stash push -m "mca-checkpoint: $LABEL" --include-untracked
-echo "✅ Checkpoint creado: mca-checkpoint: $LABEL"
-echo "   Para listar: git stash list | grep mca-checkpoint"
-echo "   Para restaurar: /rollback"
+echo "Checkpoint created: mca-checkpoint: $LABEL"
+echo "List checkpoints: git stash list | grep mca-checkpoint"
+echo "Restore with: /rollback"
 ```
 
-### 2b. Sin git → copia de archivos
+### 2b. No git -> file copy backup
 
 ```bash
 LABEL="${ARGUMENTS:-$(date +%Y%m%d-%H%M%S)}"
 BACKUP_DIR=".multi-agent-checkpoints/$LABEL"
 mkdir -p "$BACKUP_DIR"
 
-# Copia todos los archivos tracked (excluye node_modules, .git, etc.)
 rsync -a \
   --exclude='.git/' \
   --exclude='node_modules/' \
@@ -42,22 +41,21 @@ rsync -a \
   --exclude='dist/' \
   . "$BACKUP_DIR/"
 
-echo "✅ Checkpoint creado en: $BACKUP_DIR"
-echo "   Para restaurar: /rollback"
+echo "Checkpoint created in: $BACKUP_DIR"
+echo "Restore with: /rollback"
 ```
 
-### 3. Registra el checkpoint
+### 3. Record checkpoint metadata
 
 ```bash
-# Guarda metadata para referencia
 mkdir -p .multi-agent-checkpoints
 cat >> .multi-agent-checkpoints/log.json << EOF
 {"timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)", "label": "$LABEL", "type": "git-stash"}
 EOF
 ```
 
-### 4. Confirma y continúa
+### 4. Confirm and continue
 
-Informa al usuario del checkpoint creado. Ahora es seguro ejecutar `/code` o `/full-cycle`.
+Tell the user which checkpoint was created. It is now safe to run `/code` or `/full-cycle`.
 
-> ⚠️ **Siempre crea un checkpoint ANTES de delegar a agentes** — es más barato hacer rollback que corregir errores con más prompts de AI.
+> Always create a checkpoint before delegating work to agents. Rolling back is cheaper than repairing bad output with more AI prompts.

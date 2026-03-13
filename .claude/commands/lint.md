@@ -1,31 +1,29 @@
 ---
-description: "[v0.2.0 preview] Lint con la herramienta adecuada al lenguaje detectado — ESLint, Ruff, golangci-lint, Clippy, ShellCheck"
+description: "[v0.2.0 preview] Run the language-appropriate linter: ESLint, Ruff, golangci-lint, Clippy, ShellCheck"
 ---
 
 # Lint
 
-Detecta el lenguaje del proyecto y ejecuta el linter apropiado. Sin AI — rápido y sin costo de tokens.
+Detect the project language and run the appropriate linter. No AI, no token cost.
 
-$ARGUMENTS (directorio a analizar — default: directorio actual)
+$ARGUMENTS (directory to analyze; defaults to the current directory)
 
-> ⚠️ **v0.2.0 preview**: Este skill está disponible pero la integración automática con el pipeline `/full-cycle` llega en v0.2.0.
+> v0.2.0 preview: this skill is available, but automatic `/full-cycle` integration is planned for v0.2.0.
 
-## Proceso
+## Process
 
-### 1. Detecta el lenguaje
+### 1. Detect the language
 
 ```bash
 TARGET="${ARGUMENTS:-.}"
 
 detect_language() {
-  # Prioridad: archivo de config del linter > extensiones de archivo
   [[ -f ".eslintrc*" || -f "eslint.config.*" ]] && echo "javascript" && return
   [[ -f "pyproject.toml" || -f ".ruff.toml" || -f ".pylintrc" ]] && echo "python" && return
   [[ -f ".golangci.yml" || -f "go.mod" ]] && echo "go" && return
   [[ -f "Cargo.toml" ]] && echo "rust" && return
   [[ -f ".rubocop.yml" || -f "Gemfile" ]] && echo "ruby" && return
 
-  # Fallback: extensiones más comunes
   ts_count=$(find "$TARGET" -name "*.ts" -o -name "*.tsx" 2>/dev/null | wc -l | tr -d ' ')
   py_count=$(find "$TARGET" -name "*.py" 2>/dev/null | wc -l | tr -d ' ')
   go_count=$(find "$TARGET" -name "*.go" 2>/dev/null | wc -l | tr -d ' ')
@@ -40,82 +38,76 @@ LANG=$(detect_language)
 echo "Detected language: $LANG"
 ```
 
-### 2. Ejecuta el linter
+### 2. Run the linter
 
-#### JavaScript / TypeScript → ESLint
+#### JavaScript / TypeScript -> ESLint
 
 ```bash
-# Con config existente del proyecto:
 npx eslint . --format json --output-file lint-report.json 2>/dev/null || true
-npx eslint . --format stylish  # output legible para el usuario
-
-# Si no hay config:
-npx eslint . --rule '{"no-console":1,"no-unused-vars":2}' --format stylish
+npx eslint . --format stylish
 ```
 
-#### Python → Ruff (preferido) + Pylint (fallback)
+#### Python -> Ruff (preferred) + Pylint (fallback)
 
 ```bash
-# Ruff (más rápido, reemplaza flake8 + isort + pyupgrade):
 ruff check "$TARGET" --output-format json > lint-report.json 2>/dev/null \
   || pip install ruff -q && ruff check "$TARGET" --output-format json > lint-report.json
 
-# Pylint como fallback:
 python -m pylint "$TARGET" --output-format json > lint-report.json 2>/dev/null \
   || pip install pylint -q && python -m pylint "$TARGET" --output-format json > lint-report.json
 ```
 
-#### Go → golangci-lint
+#### Go -> golangci-lint
 
 ```bash
 golangci-lint run --out-format json > lint-report.json 2>/dev/null \
   || brew install golangci-lint && golangci-lint run --out-format json > lint-report.json
 ```
 
-#### Rust → Clippy
+#### Rust -> Clippy
 
 ```bash
 cargo clippy --message-format json 2>&1 | tee lint-report.json
 ```
 
-#### Ruby → RuboCop
+#### Ruby -> RuboCop
 
 ```bash
 rubocop --format json --out lint-report.json 2>/dev/null \
   || gem install rubocop && rubocop --format json --out lint-report.json
 ```
 
-#### Shell scripts → ShellCheck
+#### Shell scripts -> ShellCheck
 
 ```bash
 find "$TARGET" -name "*.sh" -print0 | xargs -0 shellcheck --format json > lint-report.json 2>/dev/null \
   || brew install shellcheck && find "$TARGET" -name "*.sh" -print0 | xargs -0 shellcheck --format json > lint-report.json
 ```
 
-### 3. Analiza los hallazgos
+### 3. Analyze the findings
 
-Lee `lint-report.json` y presenta:
+Read `lint-report.json` and present:
 
-```
+```text
 ## Lint Report
 
-Language: [detectado]
-Tool: [herramienta usada]
+Language: [detected]
+Tool: [tool used]
 Files analyzed: n
 
 Findings by severity:
-  ERROR:   n  (bloquean CI)
-  WARNING: n  (degradan calidad)
-  INFO:    n  (estilo)
+  ERROR:   n
+  WARNING: n
+  INFO:    n
 
 Top issues:
-  [archivo:línea] [regla] [descripción]
+  [file:line] [rule] [description]
   ...
 
-Recommendation: use /lint-fix to fix ERROR and WARNING automatically
+Recommendation: use /lint-fix to address ERROR and WARNING items automatically
 ```
 
-### 4. Siguiente paso
+### 4. Next step
 
-- Si hay ERRORs o WARNINGs → usa `/lint-fix` para delegarlos a Haiku
-- Luego continúa con `/sast-scan` o `/review`
+- If there are ERRORs or WARNINGs, use `/lint-fix`
+- Then continue with `/sast-scan` or `/review`
