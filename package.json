@@ -1,6 +1,6 @@
 {
   "name": "secure-coding-agent",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Security-first orchestration for AI coding agents across Claude Code, Gemini CLI, and Codex.",
   "keywords": [
     "secure-coding",
