@@ -1,5 +1,5 @@
 ---
-description: "Phase 3: Delegate implementation to the CLI configured as 'coder' in .multi-agent.json (default: Haiku 4.5)"
+description: "Phase 3: Delegate implementation to the CLI configured as 'coder' in .multi-agent.json"
 ---
 
 Implement the task by delegating it to the CLI configured as `coder` in `.multi-agent.json`:
@@ -28,10 +28,12 @@ python3 -c "
 import json
 with open('.multi-agent.json') as f:
     config = json.load(f)
+host = config.get('host', 'claude-code')
 role = config['roles']['coder']
 adapter = config['cli_adapters'][role['cli']]
 model_id = adapter['models'].get(role['model'], role['model'])
 cmd_template = adapter.get('coder_cmd', 'UNKNOWN')
+print(f'Host: {host}')
 print(f'Coder CLI: {role[\"cli\"]}')
 print(f'Model: {model_id}')
 print(f'Subscription: {role[\"subscription\"]}')
@@ -48,7 +50,7 @@ The coder cannot ask for more context later, so provide everything up front:
 
 ### 3. Build and run the command for the configured CLI
 
-#### If coder = claude (default: Haiku 4.5)
+#### If coder = claude
 
 ```bash
 CLAUDECODE= claude \
@@ -65,7 +67,12 @@ CLAUDECODE= claude \
 codex --approval-policy auto-edit -q "[complete task description with context]"
 ```
 
-#### If coder = opencode
+#### If coder = opencode on an OpenCode host (`host = opencode` or `opencode-omo`)
+
+Implement the task in the current OpenCode session instead of spawning a nested `opencode` process.
+Use host-native subagents such as `@explore` or `@general` when they improve discovery or parallel read-only work.
+
+#### If coder = opencode on a non-OpenCode host
 
 ```bash
 opencode run "[complete task description with context]"

@@ -1,7 +1,7 @@
 {
   "name": "secure-coding-agent",
-  "version": "0.1.1",
-  "description": "Security-first orchestration for AI coding agents across Claude Code, Gemini CLI, and Codex.",
+  "version": "0.1.2",
+  "description": "Security-first orchestration for Claude Code and OpenCode-based AI workflows.",
   "keywords": [
     "secure-coding",
     "secure-development",
@@ -35,6 +35,7 @@
   "type": "module",
   "files": [
     "dist/",
+    "AGENTS.md",
     "CLAUDE.md",
     "GEMINI.md",
     ".multi-agent.json",

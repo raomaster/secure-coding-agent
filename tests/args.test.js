@@ -6,6 +6,7 @@ import { parseArgs } from "../dist/args.js";
 test("parseArgs uses current directory by default", () => {
   assert.deepEqual(parseArgs([]), {
     target: ".",
+    host: "auto",
     mcp: false,
     skipSecurity: false,
     profile: "standard",
@@ -20,11 +21,17 @@ test("parseArgs supports positional target", () => {
 });
 
 test("parseArgs supports explicit target and flags", () => {
-  const args = parseArgs(["--mcp", "--no-security", "--profile", "lite", "--target", "./demo"]);
+  const args = parseArgs(["--host", "opencode-omo", "--mcp", "--no-security", "--profile", "lite", "--target", "./demo"]);
+  assert.equal(args.host, "opencode-omo");
   assert.equal(args.mcp, true);
   assert.equal(args.skipSecurity, true);
   assert.equal(args.profile, "lite");
   assert.equal(args.target, "./demo");
+});
+
+test("parseArgs rejects invalid or missing --host value", () => {
+  assert.throws(() => parseArgs(["--host"]), /Missing value for --host/);
+  assert.throws(() => parseArgs(["--host", "weird"]), /Invalid host/);
 });
 
 test("parseArgs rejects missing --target value", () => {

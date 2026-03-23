@@ -5,12 +5,16 @@ import * as path from "node:path";
 import * as child_process from "node:child_process";
 import { fileURLToPath } from "node:url";
 import type { InstallArgs } from "./args.js";
+import { describeHost, isOpenCodeHost, resolveHost, type ResolvedHost } from "./host.js";
 import {
+    PACKAGE_NAME,
     SECURITY_DEP,
     SECURITY_AGENTS,
     PIPELINE_SKILLS,
     ORCHESTRATION_MARKER,
+    VERSION,
 } from "./meta.js";
+import type { MultiAgentConfig } from "./roles.js";
 
 // ─── Package root (where CLAUDE.md, GEMINI.md, .claude/commands/ live) ──
 const __filename = fileURLToPath(import.meta.url);
@@ -47,45 +51,32 @@ function copyFile(src: string, dest: string, label: string): boolean {
     return true;
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────
-export async function install(args: InstallArgs): Promise<void> {
-    const targetDir = path.resolve(args.target);
+function appendManagedInstruction(src: string, dest: string, label: string): void {
+    const content = fs.readFileSync(src, "utf-8");
 
-    if (!fs.existsSync(targetDir)) {
-        throw new Error(`Target directory does not exist: ${targetDir}`);
+    if (!fs.existsSync(dest)) {
+        ensureDir(path.dirname(dest));
+        fs.writeFileSync(dest, content, "utf-8");
+        ok(`${label} (created)`);
+        return;
     }
 
-    console.log(`\n${BOLD}── secure-coding-agent → ${targetDir} ──${RESET}\n`);
-
-    // ── Layer 1: agent-security-policies ──────────────────────────────
-    if (!args.skipSecurity) {
-        step(`Layer 1: ${SECURITY_DEP}`);
-        installSecurityLayer(targetDir, args.profile);
-    } else {
-        warn("Skipping security layer (--no-security)");
+    const existing = fs.readFileSync(dest, "utf-8");
+    if (existing.includes(ORCHESTRATION_MARKER)) {
+        warn(`${label}: secure-coding-agent layer already installed — skipping`);
+        return;
     }
 
-    // ── Layer 2: multi-agent orchestration ────────────────────────────
-    step("Layer 2: multi-agent orchestration");
-
-    ensureDir(path.join(targetDir, ".claude", "commands"));
-
-    installOrchestrationAppend(targetDir);
-    installRolesConfig(targetDir);
-    installGeminiMd(targetDir);
-    installPipelineSkills(targetDir);
-
-    if (args.mcp) {
-        installMcpSettings(targetDir);
-    }
-
-    // ── Summary ───────────────────────────────────────────────────────
-    printSummary(targetDir, args);
+    fs.appendFileSync(dest, `\n\n---\n\n${content}`, "utf-8");
+    ok(`${label} (secure-coding-agent layer appended)`);
 }
 
-// ─── Layer 1: call npx agent-security-policies ───────────────────────
-function installSecurityLayer(targetDir: string, profile: string): void {
-    const agents = SECURITY_AGENTS.join(",");
+function getCommandInstallDir(host: ResolvedHost): string {
+    return host === "opencode" ? path.join(".opencode", "command") : path.join(".claude", "commands");
+}
+
+export function buildSecurityCommandArgs(targetDir: string, profile: string, host: ResolvedHost): string[] {
+    const agents = SECURITY_AGENTS[host].join(",");
     const cmdArgs = [
         "--yes",
         SECURITY_DEP,
@@ -94,6 +85,110 @@ function installSecurityLayer(targetDir: string, profile: string): void {
         "--profile", profile,
         "--target", targetDir,
     ];
+
+    if (host === "opencode-omo") {
+        cmdArgs.push("--omo");
+    }
+
+    return cmdArgs;
+}
+
+function buildRolesConfig(host: ResolvedHost): MultiAgentConfig {
+    const src = path.join(PACKAGE_ROOT, ".multi-agent.json");
+    const config = JSON.parse(fs.readFileSync(src, "utf-8")) as MultiAgentConfig;
+
+    config.version = VERSION;
+    config.host = host;
+
+    if (isOpenCodeHost(host)) {
+        config.roles.planner = {
+            cli: "opencode",
+            model: "auto",
+            subscription: "OpenCode host session",
+            note: "Planning happens in the active OpenCode session",
+        };
+        config.roles.coder = {
+            cli: "opencode",
+            model: "auto",
+            subscription: "OpenCode host session",
+            note: "Implementation happens in the active OpenCode session",
+        };
+        config.roles.reviewer = {
+            cli: "opencode",
+            model: "auto",
+            subscription: "OpenCode host session",
+            note: "Review uses the current OpenCode host by default",
+        };
+        config.roles.reporter = {
+            cli: "opencode",
+            model: "auto",
+            subscription: "OpenCode host session",
+            note: "Reporting uses the current OpenCode host by default",
+        };
+    }
+
+    return config;
+}
+
+function installRootGuidance(targetDir: string, host: ResolvedHost): void {
+    if (host === "claude-code") {
+        appendManagedInstruction(
+            path.join(PACKAGE_ROOT, "CLAUDE.md"),
+            path.join(targetDir, "CLAUDE.md"),
+            "CLAUDE.md"
+        );
+        return;
+    }
+
+    appendManagedInstruction(
+        path.join(PACKAGE_ROOT, "AGENTS.md"),
+        path.join(targetDir, "AGENTS.md"),
+        "AGENTS.md"
+    );
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────
+export async function install(args: InstallArgs): Promise<void> {
+    const targetDir = path.resolve(args.target);
+
+    if (!fs.existsSync(targetDir)) {
+        throw new Error(`Target directory does not exist: ${targetDir}`);
+    }
+
+    const host = resolveHost(args.host, targetDir);
+
+    console.log(`\n${BOLD}── ${PACKAGE_NAME} → ${targetDir} ──${RESET}\n`);
+    info(`Resolved host: ${describeHost(host)}${args.host === "auto" ? " (--host auto)" : ""}`);
+
+    // ── Layer 1: agent-security-policies ──────────────────────────────
+    if (!args.skipSecurity) {
+        step(`Layer 1: ${SECURITY_DEP}`);
+        installSecurityLayer(targetDir, args.profile, host);
+    } else {
+        warn("Skipping security layer (--no-security)");
+    }
+
+    // ── Layer 2: multi-agent orchestration ────────────────────────────
+    step(`Layer 2: ${describeHost(host)} workflow layer`);
+
+    ensureDir(path.join(targetDir, getCommandInstallDir(host)));
+
+    installRootGuidance(targetDir, host);
+    installRolesConfig(targetDir, host);
+    installGeminiMd(targetDir, host);
+    installPipelineSkills(targetDir, host);
+
+    if (args.mcp) {
+        installMcpSettings(targetDir, host);
+    }
+
+    // ── Summary ───────────────────────────────────────────────────────
+    printSummary(targetDir, args, host);
+}
+
+// ─── Layer 1: call npx agent-security-policies ───────────────────────
+function installSecurityLayer(targetDir: string, profile: string, host: ResolvedHost): void {
+    const cmdArgs = buildSecurityCommandArgs(targetDir, profile, host);
 
     info(`Running: npx ${cmdArgs.join(" ")}`);
 
@@ -107,58 +202,52 @@ function installSecurityLayer(targetDir: string, profile: string): void {
     }
 }
 
-// ─── Layer 2a: append orchestration block to CLAUDE.md ───────────────
-function installOrchestrationAppend(targetDir: string): void {
-    const claudeSrc = path.join(PACKAGE_ROOT, "CLAUDE.md");
-    const claudeDest = path.join(targetDir, "CLAUDE.md");
-    const orchContent = fs.readFileSync(claudeSrc, "utf-8");
-
-    if (!fs.existsSync(claudeDest)) {
-        // No CLAUDE.md yet (e.g., --no-security) — create it directly
-        fs.writeFileSync(claudeDest, orchContent, "utf-8");
-        ok("CLAUDE.md (created)");
-        return;
-    }
-
-    const existing = fs.readFileSync(claudeDest, "utf-8");
-
-    if (existing.includes(ORCHESTRATION_MARKER)) {
-        warn("CLAUDE.md: orchestration already installed — skipping");
-        return;
-    }
-
-    // Append orchestration layer
-    fs.appendFileSync(claudeDest, `\n\n---\n\n${orchContent}`, "utf-8");
-    ok("CLAUDE.md (orchestration appended)");
-}
-
 // ─── Layer 2b: .multi-agent.json (role config) ───────────────────────
-function installRolesConfig(targetDir: string): void {
-    const src = path.join(PACKAGE_ROOT, ".multi-agent.json");
+function installRolesConfig(targetDir: string, host: ResolvedHost): void {
     const dest = path.join(targetDir, ".multi-agent.json");
-    copyFile(src, dest, ".multi-agent.json (role configuration)");
+
+    if (fs.existsSync(dest)) {
+        warn(".multi-agent.json (role configuration) already exists — skipping");
+        return;
+    }
+
+    const rendered = `${JSON.stringify(buildRolesConfig(host), null, 2)}\n`;
+    fs.writeFileSync(dest, rendered, "utf-8");
+    ok(".multi-agent.json (role configuration)");
 }
 
 // ─── Layer 2c: GEMINI.md (doesn't exist in agent-security-policies) ──
-function installGeminiMd(targetDir: string): void {
+function installGeminiMd(targetDir: string, host: ResolvedHost): void {
+    if (isOpenCodeHost(host)) {
+        info("Skipping GEMINI.md for OpenCode hosts");
+        return;
+    }
+
     const src = path.join(PACKAGE_ROOT, "GEMINI.md");
     const dest = path.join(targetDir, "GEMINI.md");
     copyFile(src, dest, "GEMINI.md");
 }
 
 // ─── Layer 2c: pipeline skills ────────────────────────────────────────
-function installPipelineSkills(targetDir: string): void {
+function installPipelineSkills(targetDir: string, host: ResolvedHost): void {
+    const commandDir = getCommandInstallDir(host);
+
     for (const skill of PIPELINE_SKILLS) {
         const src = path.join(PACKAGE_ROOT, ".claude", "commands", `${skill}.md`);
-        const dest = path.join(targetDir, ".claude", "commands", `${skill}.md`);
+        const dest = path.join(targetDir, commandDir, `${skill}.md`);
         if (fs.existsSync(src)) {
-            copyFile(src, dest, `.claude/commands/${skill}.md`);
+            copyFile(src, dest, `${commandDir}/${skill}.md`);
         }
     }
 }
 
 // ─── Layer 2d: MCP settings (optional) ───────────────────────────────
-function installMcpSettings(targetDir: string): void {
+function installMcpSettings(targetDir: string, host: ResolvedHost): void {
+    if (host !== "claude-code") {
+        warn("--mcp currently applies only to Claude Code hosts — skipping");
+        return;
+    }
+
     const src = path.join(PACKAGE_ROOT, ".claude", "settings.json");
     const dest = path.join(targetDir, ".claude", "settings.json");
 
@@ -175,14 +264,24 @@ function installMcpSettings(targetDir: string): void {
 }
 
 // ─── Summary ─────────────────────────────────────────────────────────
-function printSummary(targetDir: string, args: InstallArgs): void {
+function printSummary(targetDir: string, args: InstallArgs, host: ResolvedHost): void {
     console.log(`\n${BOLD}── Installation complete ──${RESET}\n`);
-    console.log("Stack:");
-    console.log("  🧠 Planner    → Claude Sonnet 4.6   (Claude Pro)");
-    console.log("  ⚡ Coder      → Claude Haiku 4.5    (Claude Pro)");
-    console.log("  🔍 Reviewer   → Gemini 3.1 Pro      (Google One AI Premium)");
-    console.log("  📊 Reporter   → Gemini Flash        (Google One AI Premium)");
-    console.log("  🤖 Specialist → Codex o4-mini       (ChatGPT Plus/Pro)");
+    console.log(`Host: ${describeHost(host)}`);
+    if (host === "claude-code") {
+        console.log("Stack:");
+        console.log("  🧠 Planner    → Claude Sonnet 4.6   (Claude Pro)");
+        console.log("  ⚡ Coder      → Claude Haiku 4.5    (Claude Pro)");
+        console.log("  🔍 Reviewer   → Gemini 3.1 Pro      (Google One AI Premium)");
+        console.log("  📊 Reporter   → Gemini Flash        (Google One AI Premium)");
+        console.log("  🤖 Specialist → Codex o4-mini       (ChatGPT Plus/Pro)");
+    } else {
+        console.log("Stack:");
+        console.log("  🧠 Planner    → OpenCode host session");
+        console.log("  ⚡ Coder      → OpenCode host session");
+        console.log("  🔍 Reviewer   → OpenCode host session");
+        console.log("  📊 Reporter   → OpenCode host session");
+        console.log("  🤖 Specialist → Codex o4-mini       (optional second opinion)");
+    }
     console.log("");
     console.log("Pipeline skills: /plan  /code  /review  /report  /full-cycle");
     console.log("Ops skills:      /checkpoint  /rollback  /roles  /lint  /security-review");
@@ -190,5 +289,12 @@ function printSummary(targetDir: string, args: InstallArgs): void {
         console.log("Security skills: /sast-scan  /secrets-scan  /dependency-scan");
         console.log("                 /container-scan  /iac-scan  /threat-model  /fix-findings");
     }
-    console.log(`\n${GREEN}Done. Open Claude Code in ${targetDir} and try: /full-cycle <your task>${RESET}\n`);
+
+    const commandDir = getCommandInstallDir(host);
+    const rootFile = host === "claude-code" ? "CLAUDE.md" : "AGENTS.md";
+
+    console.log(`Guidance file: ${rootFile}`);
+    console.log(`Commands dir:  ${commandDir}`);
+    console.log(`Config:        .multi-agent.json`);
+    console.log(`\n${GREEN}Done. Open ${describeHost(host)} in ${targetDir} and try: /full-cycle <your task>${RESET}\n`);
 }

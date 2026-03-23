@@ -8,6 +8,24 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ## [Unreleased]
 
+---
+
+## [0.1.2] — 2026-03-23
+
+### Added
+
+- Host-aware install modes: `claude-code`, `opencode`, `opencode-omo`, plus `--host auto`
+- Prompt-based installation guide in `docs/guide/installation.md`
+- `AGENTS.md` asset for OpenCode-based hosts
+- OpenCode host defaults in `.multi-agent.json`
+
+### Changed
+
+- `secure-coding-agent` now routes the security layer by host, including `--agent opencode --skills --omo` for OmO installs
+- The bash installer now copies `.multi-agent.json` and stays aligned with the TypeScript installer
+- Host-aware workflow commands now avoid nested OpenCode recursion when the active host is OpenCode
+- Prompt-first installation is now the recommended setup path; direct `npx` install remains available as fallback
+
 ### Added
 
 - Architecture, design decision, compatibility, use-case, and walkthrough docs

@@ -15,6 +15,7 @@ python3 -c "
 import json
 with open('.multi-agent.json') as f: c = json.load(f)
 r = c['roles']
+print(f'  Host      -> {c.get("host", "claude-code")}')
 print(f'  Planner   -> {r[\"planner\"][\"cli\"]} ({r[\"planner\"][\"model\"]})')
 print(f'  Coder     -> {r[\"coder\"][\"cli\"]} ({r[\"coder\"][\"model\"]})')
 print(f'  Reviewer  -> {r[\"reviewer\"][\"cli\"]} ({r[\"reviewer\"][\"model\"]})')
@@ -40,7 +41,7 @@ git stash push -m "mca-checkpoint: full-cycle-start-$(date +%Y%m%d-%H%M%S)" --in
 
 ---
 
-### Phase 1: Plan (Planner: Sonnet)
+### Phase 1: Plan (Planner: see `.multi-agent.json`)
 
 Explore the codebase, identify conventions, and create an atomic task plan.
 

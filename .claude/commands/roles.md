@@ -16,10 +16,12 @@ Read `.multi-agent.json` and display the active stack:
 cat .multi-agent.json | python3 -c "
 import json, sys
 config = json.load(sys.stdin)
+host = config.get('host', 'claude-code')
 roles = config['roles']
 adapters = config['cli_adapters']
 
 print('\nCurrent multi-agent stack:\n')
+print(f'  {"host":<12} -> {host}')
 for role, cfg in roles.items():
     cli = cfg['cli']
     model_alias = cfg['model']
@@ -70,7 +72,7 @@ if len(args) >= 4 and args[0] == "set":
     print(f"Role '{role}' updated:")
     print(f"  Before: {old_cli} ({old_model})")
     print(f"  After : {cli} ({model})")
-    print("\nClaude Code skills such as /code and /review will use the new CLI automatically.")
+    print("\nInstalled workflow commands such as /code and /review will use the new CLI automatically.")
 EOF
 ```
 
@@ -98,4 +100,4 @@ Changing a role here updates all dependent skills without any further file edits
 | `gemini` | no | yes, pro | yes, flash | 2M context, token caching |
 | `codex` | yes, o4-mini/o3 | yes, o3 | no | ChatGPT Plus/Pro |
 | `github-copilot` | limited | no | no | Shell suggestions only |
-| `opencode` | yes, auto | no | no | Requires an opencode.ai subscription |
+| `opencode` | yes, auto | yes, auto | yes, auto | Uses the active OpenCode host when `host` is `opencode` or `opencode-omo` |

@@ -20,5 +20,19 @@ test("install.sh parses --profile without treating it as target", async () => {
 
   assert.equal(fs.existsSync(path.join(projectDir, "CLAUDE.md")), true);
   assert.equal(fs.existsSync(path.join(projectDir, "GEMINI.md")), true);
+  assert.equal(fs.existsSync(path.join(projectDir, ".multi-agent.json")), true);
   assert.equal(fs.existsSync(path.join(projectDir, ".claude", "commands", "security-review.md")), true);
+});
+
+test("install.sh supports OpenCode host mode", async () => {
+  const projectDir = await fsp.mkdtemp(path.join(os.tmpdir(), "sca-shell-opencode-"));
+
+  await execFileAsync("bash", ["./install.sh", "--no-security", "--host", "opencode", projectDir], {
+    cwd: repoRoot,
+  });
+
+  assert.equal(fs.existsSync(path.join(projectDir, "AGENTS.md")), true);
+  assert.equal(fs.existsSync(path.join(projectDir, ".opencode", "command", "plan.md")), true);
+  assert.equal(fs.existsSync(path.join(projectDir, ".claude", "commands", "plan.md")), false);
+  assert.equal(fs.existsSync(path.join(projectDir, ".multi-agent.json")), true);
 });

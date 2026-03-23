@@ -1,5 +1,5 @@
 ---
-description: "Generate an executive report with the CLI configured as 'reporter' in .multi-agent.json (default: Gemini Flash)"
+description: "Generate an executive report with the CLI configured as 'reporter' in .multi-agent.json"
 ---
 
 Generate an executive report using the CLI configured as `reporter`:
@@ -15,9 +15,11 @@ python3 -c "
 import json
 with open('.multi-agent.json') as f:
     config = json.load(f)
+host = config.get('host', 'claude-code')
 role = config['roles']['reporter']
 adapter = config['cli_adapters'][role['cli']]
 model_id = adapter['models'].get(role['model'], role['model'])
+print(f'Host: {host}')
 print(f'Reporter CLI: {role[\"cli\"]} / model: {model_id}')
 "
 ```
@@ -32,7 +34,7 @@ ls *-report.json security-report-*.md threat-model-*.md 2>/dev/null || echo "(us
 
 ### 3. Generate the report using the configured CLI
 
-#### If reporter = gemini (default: Flash)
+#### If reporter = gemini
 
 ```bash
 cat [findings] | gemini -m flash --yolo \
@@ -63,6 +65,16 @@ cat [findings] | gemini -m flash --yolo \
 
 ```bash
 codex -q "Generate an executive security report in markdown from these findings: [findings]"
+```
+
+#### If reporter = opencode on an OpenCode host (`host = opencode` or `opencode-omo`)
+
+Generate the report in the current OpenCode session using the current findings and save it as `security-report-YYYYMMDD.md`.
+
+#### If reporter = opencode on a non-OpenCode host
+
+```bash
+opencode run "Generate an executive security report in markdown from these findings: [findings]"
 ```
 
 ### 4. Save the report

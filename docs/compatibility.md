@@ -27,6 +27,10 @@ Windows / WSL is not yet first-class support.
 ### Required for full workflow value
 
 - `@anthropic-ai/claude-code`
+- `opencode` for OpenCode host mode
+
+### Optional role runtimes
+
 - `@google/gemini-cli`
 - `@openai/codex`
 
@@ -46,7 +50,9 @@ Windows / WSL is not yet first-class support.
 The stable `v0.1.x` contract includes:
 
 - install via `npx secure-coding-agent`
+- prompt-based install guidance via `docs/guide/installation.md`
 - positional target path
+- `--host auto|claude-code|opencode|opencode-omo`
 - `.multi-agent.json`
 - `/plan`, `/code`, `/review`, `/report`, `/full-cycle`
 - `/checkpoint`, `/rollback`, `/roles`
@@ -66,6 +72,7 @@ Current behavior:
 
 - if the target directory does not exist, installation fails
 - if `agent-security-policies` cannot be run, the installer fails unless `--no-security` is used
+- if `--host auto` cannot infer OpenCode or OmO from the repo, it falls back to `claude-code`
 - if a command depends on an unavailable external CLI, the workflow becomes unavailable at runtime
 
 The project does not yet provide full runtime dependency diagnostics for every installed command.

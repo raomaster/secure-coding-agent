@@ -1,5 +1,7 @@
 // src/roles.ts — Role configuration types and command generation
 
+import type { ResolvedHost } from "./host.js";
+
 export type RoleName = "planner" | "coder" | "reviewer" | "reporter" | "specialist";
 export type CliName = "claude" | "gemini" | "codex" | "github-copilot" | "opencode";
 
@@ -27,6 +29,7 @@ export interface CheckpointConfig {
 
 export interface MultiAgentConfig {
     version: string;
+    host: ResolvedHost;
     roles: Record<RoleName, RoleConfig>;
     cli_adapters: Record<CliName, CliAdapter>;
     checkpoints: CheckpointConfig;
@@ -100,6 +103,7 @@ export function buildReporterCmd(
  */
 export function printRoles(config: MultiAgentConfig): void {
     console.log("\nCurrent multi-agent role assignments:\n");
+    console.log(`  host         → ${config.host}`);
     for (const [role, cfg] of Object.entries(config.roles)) {
         const adapter = config.cli_adapters[cfg.cli as CliName];
         const modelId = adapter?.models[cfg.model] ?? cfg.model;

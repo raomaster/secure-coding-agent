@@ -52,19 +52,18 @@ Then open `README.md` and point to:
 
 ### 4. Show the example project
 
-Use [`examples/minimal-api`](../examples/minimal-api/README.md):
+Use [`examples/minimal-api`](../examples/minimal-api/README.md) or paste the install prompt from `docs/guide/installation.md` into your host agent.
 
 ```bash
 cd examples/minimal-api
-npx secure-coding-agent --no-security
+npx secure-coding-agent --host auto --no-security
 ```
 
 Show the installed files:
 
-- `CLAUDE.md`
-- `GEMINI.md`
+- `CLAUDE.md` or `AGENTS.md`
 - `.multi-agent.json`
-- `.claude/commands/*`
+- `.claude/commands/*` or `.opencode/command/*`
 
 ### 5. Close with the thesis
 

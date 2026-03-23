@@ -1,5 +1,6 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.2",
+  "host": "claude-code",
   "roles": {
     "planner": {
       "cli": "claude",
@@ -73,10 +74,12 @@
     "opencode": {
       "description": "OpenCode (sst/opencode)",
       "coder_cmd": "opencode run \"{prompt}\"",
+      "review_cmd": "opencode run \"{prompt}\"",
+      "prompt_cmd": "opencode run \"{prompt}\"",
       "models": {
         "auto": "auto"
       },
-      "note": "Requires opencode.ai subscription — not Claude Pro/Google One"
+      "note": "Use as the active host session for OpenCode and oh-my-openagent workflows"
     }
   },
   "checkpoints": {

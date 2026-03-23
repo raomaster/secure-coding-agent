@@ -23,7 +23,7 @@ Preview / evolving workflows:
 ### `/plan`
 
 **Phase**: 1 + 2 — Research + Planning
-**Agent**: Sonnet 4.6 (Planner)
+**Agent**: Configured `planner` host/runtime (host-aware default)
 
 Analyzes a requirement, explores the codebase, and produces a structured task plan for Haiku workers.
 
@@ -48,7 +48,7 @@ Analyzes a requirement, explores the codebase, and produces a structured task pl
 ### `/code`
 
 **Phase**: 3 — Implementation
-**Agent**: Configured `coder` role (default: Haiku 4.5)
+**Agent**: Configured `coder` role (host-aware default)
 
 Delegates code implementation to the coder CLI. Creates a checkpoint automatically before any file changes.
 
@@ -70,7 +70,7 @@ Delegates code implementation to the coder CLI. Creates a checkpoint automatical
 ### `/review`
 
 **Phase**: 4 — Security Review
-**Agent**: Configured `reviewer` role (default: Gemini 3.1 Pro)
+**Agent**: Configured `reviewer` role (host-aware default)
 
 Runs security review on changed files. In v0.2.0+, checks cache first — only sends files that changed since last review.
 
@@ -96,7 +96,7 @@ Runs security review on changed files. In v0.2.0+, checks cache first — only s
 ### `/report`
 
 **Phase**: Final — Executive Summary
-**Agent**: Configured `reporter` role (default: Gemini Flash)
+**Agent**: Configured `reporter` role (host-aware default)
 
 Generates a markdown executive report from all findings in the current session.
 

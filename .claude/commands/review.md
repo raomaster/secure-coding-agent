@@ -17,11 +17,13 @@ import json
 with open('.multi-agent.json') as f:
     config = json.load(f)
 
+host    = config.get('host', 'claude-code')
 role    = config['roles']['reviewer']
 adapter = config['cli_adapters'][role['cli']]
 model   = adapter['models'].get(role['model'], role['model'])
 cli     = role['cli']
 
+print(f"Host     : {host}")
 print(f"Reviewer : {cli} / {model}  [{role['subscription']}]")
 EOF
 ```
@@ -73,10 +75,12 @@ import json, shlex
 with open('.multi-agent.json') as f:
     config = json.load(f)
 
+host = config.get('host', 'claude-code')
 role = config['roles']['reviewer']
 adapter = config['cli_adapters'][role['cli']]
 model = adapter['models'].get(role['model'], role['model'])
 
+print(f"HOST={shlex.quote(host)}")
 print(f"REVIEWER_CLI={shlex.quote(role['cli'])}")
 print(f"REVIEWER_MODEL={shlex.quote(model)}")
 EOF
@@ -120,6 +124,22 @@ case "$REVIEWER_CLI" in
     ;;
   claude)
     echo "Reviewer is set to Claude. Perform the review in the current session using Read on .review-files.tmp."
+    ;;
+  opencode)
+    if [[ "$HOST" == "opencode" || "$HOST" == "opencode-omo" ]]; then
+      echo "Reviewer is set to OpenCode. Perform the review in the current host session using .review-files.tmp and the prompt in .review-prompt.tmp."
+    else
+      {
+        cat .review-prompt.tmp
+        printf '\n\nFiles:\n'
+        while IFS= read -r file; do
+          printf '\n===== %s =====\n' "$file"
+          cat "$file"
+        done < .review-files.tmp
+      } > .review-input.tmp
+      opencode run "$(cat .review-input.tmp)"
+      rm -f .review-input.tmp
+    fi
     ;;
   *)
     echo "Unsupported reviewer.cli for /review: $REVIEWER_CLI"

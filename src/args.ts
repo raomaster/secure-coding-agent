@@ -1,7 +1,10 @@
 // src/args.ts — CLI argument parsing
 
+import { DEFAULT_HOST, SUPPORTED_HOSTS, type InstallHost } from "./host.js";
+
 export interface InstallArgs {
     target: string;
+    host: InstallHost;
     mcp: boolean;
     skipSecurity: boolean;
     profile: "standard" | "lite";
@@ -20,6 +23,7 @@ function readOptionValue(argv: string[], index: number, option: string): string 
 export function parseArgs(argv: string[]): InstallArgs {
     const args: InstallArgs = {
         target: ".",
+        host: DEFAULT_HOST,
         mcp: false,
         skipSecurity: false,
         profile: "standard",
@@ -47,6 +51,17 @@ export function parseArgs(argv: string[]): InstallArgs {
             case "--target":
                 args.target = readOptionValue(argv, i, "--target");
                 i++;
+                break;
+            case "--host":
+                const host = readOptionValue(argv, i, "--host");
+                if (SUPPORTED_HOSTS.includes(host as InstallHost)) {
+                    args.host = host as InstallHost;
+                    i++;
+                } else {
+                    throw new Error(
+                        `Invalid host: ${host}. Use ${SUPPORTED_HOSTS.join(", ")}.`
+                    );
+                }
                 break;
             case "--profile":
                 const profile = readOptionValue(argv, i, "--profile");

@@ -3,7 +3,7 @@
 ## Overview
 
 Secure Coding Agent is a **security-first orchestration layer** for AI coding workflows.
-It does not replace model CLIs. It installs a structured operating model on top of them.
+It does not replace host runtimes such as Claude Code or OpenCode. It installs a structured operating model on top of them.
 
 The architecture is intentionally simple:
 
@@ -27,6 +27,7 @@ AI coding CLIs are individually capable, but the default working model is weak:
 Secure Coding Agent addresses that by installing:
 
 - role configuration
+- host-aware runtime defaults
 - command-driven workflow entrypoints
 - review and reporting conventions
 - rollback-oriented operating safeguards
@@ -43,6 +44,7 @@ Two entrypoints install the system:
 Responsibilities:
 
 - bootstrap orchestration files into a target repo
+- resolve the target host (`claude-code`, `opencode`, or `opencode-omo`)
 - optionally call `agent-security-policies`
 - keep installation idempotent
 - install only the contract files required to operate the workflow
@@ -53,6 +55,7 @@ Responsibilities:
 
 It defines:
 
+- host mode
 - roles
 - CLI adapters
 - model mappings
@@ -62,7 +65,11 @@ This is the main abstraction that makes the system configurable without rewritin
 
 ### 3. Command layer
 
-Slash commands in `.claude/commands/` act as workflow entrypoints.
+Workflow commands act as the main entrypoints.
+They are installed into a host-appropriate directory:
+
+- `.claude/commands/` for `claude-code` and `opencode-omo`
+- `.opencode/command/` for plain `opencode`
 
 Stable commands:
 
@@ -109,11 +116,12 @@ Planned primitives:
 flowchart TD
     A["Target repository"] --> B["secure-coding-agent installer"]
     B --> C["Optional: agent-security-policies"]
-    B --> D["Install orchestration files"]
-    D --> E["CLAUDE.md + GEMINI.md"]
-    D --> F[".multi-agent.json"]
-    D --> G[".claude/commands/*"]
-    D --> H["Optional MCP settings"]
+    B --> D["Resolve host mode"]
+    D --> E["Install orchestration files"]
+    E --> F["CLAUDE.md or AGENTS.md"]
+    E --> G[".multi-agent.json"]
+    E --> H["Host command directory"]
+    E --> I["Optional MCP settings"]
 ```
 
 ## Runtime Flow
@@ -144,7 +152,7 @@ This includes code, configuration, existing prompts, and git state.
 
 ### External CLIs and model providers
 
-Claude Code, Gemini CLI, and Codex are external execution surfaces with their own behavior, auth, and failure modes.
+Claude Code, OpenCode, Gemini CLI, and Codex are external execution surfaces with their own behavior, auth, and failure modes.
 
 ### Security tooling
 
@@ -196,6 +204,7 @@ It is not yet a full runtime platform.
 Current limits:
 
 - command workflows depend on external CLIs being installed and authenticated
+- OpenCode and OmO support are currently implemented as host-aware file installs, not as a separate runtime engine
 - preview commands still rely on external scanners and local environment assumptions
 - no schema validation for `.multi-agent.json` yet
 - no full end-to-end test harness against all external tools

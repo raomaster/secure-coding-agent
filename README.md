@@ -7,11 +7,11 @@
 ![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Status v0.1](https://img.shields.io/badge/status-v0.1%20stable-0a7f5a)
 
-**A security-first orchestration layer for AI coding agents.**
+**A security-first workflow layer for Claude Code and OpenCode-based agents.**
 
 Secure Coding Agent turns subscription-based coding CLIs into a structured secure development workflow with planning, implementation, review, reporting, and rollback built in.
 
-- Coordinate **Claude, Gemini, and Codex** through explicit roles instead of ad hoc prompting.
+- Coordinate **Claude Code, OpenCode, Codex, and optional review runtimes** through explicit roles instead of ad hoc prompting.
 - Keep security **inside the development workflow**, not as a disconnected afterthought.
 - Install a reproducible workflow with **config, commands, checkpoints, CI validation, and docs**.
 
@@ -36,6 +36,23 @@ This project treats AI-assisted development as a systems problem:
 - explicit operational boundaries
 
 ## Quickstart
+
+### Recommended: let an agent install it
+
+Copy and paste this prompt into your agent session:
+
+```text
+Install and configure secure-coding-agent in this repository by following the instructions here:
+https://raw.githubusercontent.com/raomaster/secure-coding-agent/main/docs/guide/installation.md
+
+Use curl to fetch the guide.
+Default to --host auto.
+Keep the security layer enabled unless I explicitly ask to skip it.
+If oh-my-openagent / oh-my-opencode is already present, install the OMO-aware setup.
+Only ask questions if the host setup is genuinely ambiguous.
+```
+
+### Fallback: run the CLI yourself
 
 Run it from the root of the project you want to bootstrap:
 
@@ -62,10 +79,10 @@ Core roles:
 
 | Role | Default CLI / model | Responsibility |
 |---|---|---|
-| Planner | Claude Sonnet 4.6 | Research, decomposition, orchestration |
-| Coder | Claude Haiku 4.5 | Implementation workers |
-| Reviewer | Gemini 3.1 Pro | Security review |
-| Reporter | Gemini Flash | Executive reporting |
+| Planner | Claude Sonnet 4.6 or OpenCode host | Research, decomposition, orchestration |
+| Coder | Claude Haiku 4.5 or OpenCode host | Implementation workers |
+| Reviewer | Gemini 3.1 Pro or OpenCode host | Security review |
+| Reporter | Gemini Flash or OpenCode host | Executive reporting |
 | Specialist | Codex o4-mini | Second opinion / complex problem solving |
 
 ## How it works
@@ -84,7 +101,8 @@ flowchart TD
 Key design choices:
 
 - **Role-driven orchestration**: each model has a defined job
-- **Config-driven runtime**: `.multi-agent.json` controls CLIs and models
+- **Host-aware install**: `claude-code`, `opencode`, and `opencode-omo` install different surfaces
+- **Config-driven runtime**: `.multi-agent.json` controls the preferred stack and runtime commands
 - **Rollback-first safety**: agent output can be reverted cheaply
 - **Security-first workflow**: review is part of delivery, not a separate ritual
 
@@ -93,7 +111,9 @@ Key design choices:
 These flows are part of the current `v0.1.x` stable surface:
 
 - `npx secure-coding-agent`
+- prompt-based install via `docs/guide/installation.md`
 - positional target path support
+- `--host auto|claude-code|opencode|opencode-omo`
 - `.multi-agent.json` installation and role configuration
 - `/plan`, `/code`, `/review`, `/report`, `/full-cycle`
 - `/checkpoint`, `/rollback`, `/roles`
@@ -179,9 +199,10 @@ Required CLIs depend on the workflow you want:
 |---|---|
 | Orchestration install | Node.js + npm |
 | Full security layer | `agent-security-policies` install path via `npx` |
-| Claude role execution | `@anthropic-ai/claude-code` |
-| Gemini review/reporting | `@google/gemini-cli` |
-| Codex specialist role | `@openai/codex` |
+| Claude host mode | `@anthropic-ai/claude-code` |
+| OpenCode host mode | `opencode` |
+| Optional Codex specialist role | `@openai/codex` |
+| Optional Gemini review/reporting | `@google/gemini-cli` |
 
 See [docs/compatibility.md](docs/compatibility.md) for explicit behavior and limitations.
 
@@ -224,11 +245,17 @@ npm i -g @openai/codex
 codex
 ```
 
-### From npm
+### From npm (fallback/manual)
 
 ```bash
 # Run in the current project
 npx secure-coding-agent
+
+# Let the installer infer the host from the repo
+npx secure-coding-agent --host auto
+
+# Force OpenCode + oh-my-openagent mode
+npx secure-coding-agent --host opencode-omo
 
 # Install globally if preferred
 npm i -g secure-coding-agent
@@ -251,11 +278,12 @@ npm run verify
 
 Layer 2 from this package installs:
 
-- `CLAUDE.md` orchestration layer
-- `GEMINI.md` reviewer / reporter guidance
-- `.multi-agent.json` role configuration
-- `.claude/commands/*` command set
-- optional `.claude/settings.json` for MCP
+- `CLAUDE.md` for `claude-code` hosts
+- `AGENTS.md` for `opencode` and `opencode-omo` hosts
+- `.multi-agent.json` role configuration with host-aware defaults
+- `.claude/commands/*` for `claude-code` and `opencode-omo`
+- `.opencode/command/*` for plain `opencode`
+- optional `.claude/settings.json` for Claude Code MCP
 
 ## Roadmap
 
