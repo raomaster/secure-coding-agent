@@ -27,9 +27,16 @@ export interface CheckpointConfig {
     fallback_dir: string;
 }
 
+export interface PersistenceConfig {
+    dir: string;
+    write_plan: boolean;
+    write_tasks: boolean;
+}
+
 export interface MultiAgentConfig {
     version: string;
     host: ResolvedHost;
+    persistence: PersistenceConfig;
     roles: Record<RoleName, RoleConfig>;
     cli_adapters: Record<CliName, CliAdapter>;
     checkpoints: CheckpointConfig;
@@ -104,6 +111,9 @@ export function buildReporterCmd(
 export function printRoles(config: MultiAgentConfig): void {
     console.log("\nCurrent multi-agent role assignments:\n");
     console.log(`  host         → ${config.host}`);
+    console.log(`  persist plan → ${config.persistence.write_plan}`);
+    console.log(`  persist task → ${config.persistence.write_tasks}`);
+    console.log(`  persist dir  → ${config.persistence.dir}`);
     for (const [role, cfg] of Object.entries(config.roles)) {
         const adapter = config.cli_adapters[cfg.cli as CliName];
         const modelId = adapter?.models[cfg.model] ?? cfg.model;

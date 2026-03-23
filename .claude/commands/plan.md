@@ -8,6 +8,21 @@ $ARGUMENTS
 
 ## Process
 
+### 0. Read host and persistence settings
+
+```bash
+python3 -c "
+import json
+with open('.multi-agent.json') as f:
+    config = json.load(f)
+persistence = config.get('persistence', {})
+print(f'Host: {config.get("host", "claude-code")}')
+print(f'Persist plan: {persistence.get("write_plan", False)}')
+print(f'Persist tasks: {persistence.get("write_tasks", False)}')
+print(f'Persistence dir: {persistence.get("dir", ".secure-coding")}')
+"
+```
+
 ### 1. Research
 
 Explore the codebase before planning:
@@ -15,6 +30,7 @@ Explore the codebase before planning:
 - use `Grep` to detect existing patterns, conventions, types, and interfaces
 - use `Read` to understand similar implementations
 - use the Agent tool with `subagent_type=\"Explore\"` if the repository is large
+- if the active host is OpenCode or OmO, prefer host-native helpers such as `@explore` or `@general` for scoped read-only discovery when helpful
 
 ### 2. Clarifying questions
 
@@ -41,6 +57,13 @@ TASK 1: [descriptive title]
 
 TASK 2: ...
 ```
+
+If `.multi-agent.json` enables persistence, or the user explicitly asks to keep markdown artifacts, write:
+
+- `.secure-coding/plan.md` with the approved plan
+- `.secure-coding/tasks.md` with a checkbox task list derived from the plan
+
+If the host is OmO and a native plan already exists in `.sisyphus/plans/`, do not overwrite it. Mirror the approved plan into `.secure-coding/` only when persistence is requested.
 
 ### 4. Initial security analysis
 

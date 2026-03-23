@@ -16,6 +16,7 @@ import json
 with open('.multi-agent.json') as f: c = json.load(f)
 r = c['roles']
 print(f'  Host      -> {c.get("host", "claude-code")}')
+print(f'  Persist   -> {c.get("persistence", {}).get("dir", ".secure-coding")} (plan={c.get("persistence", {}).get("write_plan", False)}, tasks={c.get("persistence", {}).get("write_tasks", False)})')
 print(f'  Planner   -> {r[\"planner\"][\"cli\"]} ({r[\"planner\"][\"model\"]})')
 print(f'  Coder     -> {r[\"coder\"][\"cli\"]} ({r[\"coder\"][\"model\"]})')
 print(f'  Reviewer  -> {r[\"reviewer\"][\"cli\"]} ({r[\"reviewer\"][\"model\"]})')
@@ -54,6 +55,7 @@ See `/plan` for the detailed process.
 Present the full plan:
 - tasks and execution order (parallel vs sequential)
 - which CLIs will be used in each phase
+- whether `.secure-coding/plan.md` and `.secure-coding/tasks.md` will be written
 - the created checkpoint reference from `git stash list | grep mca-checkpoint | head -1`
 
 Wait for confirmation before proceeding.

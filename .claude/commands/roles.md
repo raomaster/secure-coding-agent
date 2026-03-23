@@ -17,11 +17,15 @@ cat .multi-agent.json | python3 -c "
 import json, sys
 config = json.load(sys.stdin)
 host = config.get('host', 'claude-code')
+persistence = config.get('persistence', {})
 roles = config['roles']
 adapters = config['cli_adapters']
 
 print('\nCurrent multi-agent stack:\n')
 print(f'  {"host":<12} -> {host}')
+print(f'  {"persist dir":<12} -> {persistence.get("dir", ".secure-coding")}')
+print(f'  {"write plan":<12} -> {persistence.get("write_plan", False)}')
+print(f'  {"write tasks":<12} -> {persistence.get("write_tasks", False)}')
 for role, cfg in roles.items():
     cli = cfg['cli']
     model_alias = cfg['model']

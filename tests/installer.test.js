@@ -7,7 +7,7 @@ import path from "node:path";
 
 import { buildSecurityCommandArgs, install } from "../dist/installer.js";
 import { resolveHost } from "../dist/host.js";
-import { PIPELINE_SKILLS } from "../dist/meta.js";
+import { BUILTIN_SKILLS, OMO_AGENT_FILES, PIPELINE_SKILLS } from "../dist/meta.js";
 
 async function makeTempProject() {
   const dir = await fsp.mkdtemp(path.join(os.tmpdir(), "sca-install-"));
@@ -32,14 +32,25 @@ test("TypeScript installer copies expected files in --no-security mode", async (
   assert.equal(fs.existsSync(path.join(projectDir, ".multi-agent.json")), true);
   assert.equal(fs.existsSync(path.join(projectDir, ".claude", "settings.json")), true);
 
-   const config = JSON.parse(await fsp.readFile(path.join(projectDir, ".multi-agent.json"), "utf-8"));
-   assert.equal(config.host, "claude-code");
+  const config = JSON.parse(await fsp.readFile(path.join(projectDir, ".multi-agent.json"), "utf-8"));
+  assert.equal(config.host, "claude-code");
+  assert.equal(config.persistence.dir, ".secure-coding");
+  assert.equal(config.persistence.write_plan, false);
+  assert.equal(config.persistence.write_tasks, false);
 
   for (const skill of PIPELINE_SKILLS) {
     assert.equal(
       fs.existsSync(path.join(projectDir, ".claude", "commands", `${skill}.md`)),
       true,
       `missing installed skill ${skill}`
+    );
+  }
+
+  for (const skill of BUILTIN_SKILLS) {
+    assert.equal(
+      fs.existsSync(path.join(projectDir, ".claude", "skills", skill, "SKILL.md")),
+      true,
+      `missing installed builtin skill ${skill}`
     );
   }
 });
@@ -90,6 +101,7 @@ test("TypeScript installer writes OpenCode assets for the opencode host", async 
   assert.equal(fs.existsSync(path.join(projectDir, ".claude", "settings.json")), false);
   assert.equal(fs.existsSync(path.join(projectDir, ".opencode", "command", "plan.md")), true);
   assert.equal(fs.existsSync(path.join(projectDir, ".claude", "commands", "plan.md")), false);
+  assert.equal(fs.existsSync(path.join(projectDir, ".opencode", "skills", "create-skill", "SKILL.md")), true);
 
   const config = JSON.parse(await fsp.readFile(path.join(projectDir, ".multi-agent.json"), "utf-8"));
   assert.equal(config.host, "opencode");
@@ -113,6 +125,15 @@ test("TypeScript installer writes OmO-compatible assets for the opencode-omo hos
   assert.equal(fs.existsSync(path.join(projectDir, "AGENTS.md")), true);
   assert.equal(fs.existsSync(path.join(projectDir, ".claude", "commands", "plan.md")), true);
   assert.equal(fs.existsSync(path.join(projectDir, ".opencode", "command", "plan.md")), false);
+  assert.equal(fs.existsSync(path.join(projectDir, ".claude", "skills", "create-skill", "SKILL.md")), true);
+
+  for (const agent of OMO_AGENT_FILES) {
+    assert.equal(
+      fs.existsSync(path.join(projectDir, ".claude", "agents", `${agent}.md`)),
+      true,
+      `missing OmO agent ${agent}`
+    );
+  }
 
   const config = JSON.parse(await fsp.readFile(path.join(projectDir, ".multi-agent.json"), "utf-8"));
   assert.equal(config.host, "opencode-omo");

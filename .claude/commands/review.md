@@ -30,6 +30,8 @@ EOF
 
 ### 2. Identify files
 
+If `.secure-coding/plan.md` or `.secure-coding/tasks.md` exists, read them as extra review context before reviewing code changes.
+
 ```bash
 rm -f .review-files.tmp .review-prompt.tmp
 
@@ -128,6 +130,7 @@ case "$REVIEWER_CLI" in
   opencode)
     if [[ "$HOST" == "opencode" || "$HOST" == "opencode-omo" ]]; then
       echo "Reviewer is set to OpenCode. Perform the review in the current host session using .review-files.tmp and the prompt in .review-prompt.tmp."
+      echo "If available, use @barrier-review for final risk review and Aegis for security-sensitive findings."
     else
       {
         cat .review-prompt.tmp

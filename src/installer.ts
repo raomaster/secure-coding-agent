@@ -5,8 +5,12 @@ import * as path from "node:path";
 import * as child_process from "node:child_process";
 import { fileURLToPath } from "node:url";
 import type { InstallArgs } from "./args.js";
-import { describeHost, isOpenCodeHost, resolveHost, type ResolvedHost } from "./host.js";
+import { describeHost, resolveHost, type ResolvedHost } from "./host.js";
+import { getHostAdapter, type HostAdapter } from "./host-adapters.js";
 import {
+    BUILTIN_SKILLS,
+    DEFAULT_PERSISTENCE_DIR,
+    OMO_AGENT_FILES,
     PACKAGE_NAME,
     SECURITY_DEP,
     SECURITY_AGENTS,
@@ -71,8 +75,21 @@ function appendManagedInstruction(src: string, dest: string, label: string): voi
     ok(`${label} (secure-coding-agent layer appended)`);
 }
 
-function getCommandInstallDir(host: ResolvedHost): string {
-    return host === "opencode" ? path.join(".opencode", "command") : path.join(".claude", "commands");
+function installFileSet(
+    sourceDir: string,
+    destDir: string,
+    fileNames: readonly string[],
+    fileNameBuilder: (name: string) => string,
+    labelPrefix: string
+): void {
+    for (const name of fileNames) {
+        const fileName = fileNameBuilder(name);
+        const src = path.join(sourceDir, fileName);
+        const dest = path.join(destDir, fileName);
+        if (fs.existsSync(src)) {
+            copyFile(src, dest, `${labelPrefix}/${fileName}`);
+        }
+    }
 }
 
 export function buildSecurityCommandArgs(targetDir: string, profile: string, host: ResolvedHost): string[] {
@@ -99,8 +116,13 @@ function buildRolesConfig(host: ResolvedHost): MultiAgentConfig {
 
     config.version = VERSION;
     config.host = host;
+    config.persistence = {
+        dir: config.persistence?.dir ?? DEFAULT_PERSISTENCE_DIR,
+        write_plan: config.persistence?.write_plan ?? false,
+        write_tasks: config.persistence?.write_tasks ?? false,
+    };
 
-    if (isOpenCodeHost(host)) {
+    if (host === "opencode" || host === "opencode-omo") {
         config.roles.planner = {
             cli: "opencode",
             model: "auto",
@@ -130,20 +152,11 @@ function buildRolesConfig(host: ResolvedHost): MultiAgentConfig {
     return config;
 }
 
-function installRootGuidance(targetDir: string, host: ResolvedHost): void {
-    if (host === "claude-code") {
-        appendManagedInstruction(
-            path.join(PACKAGE_ROOT, "CLAUDE.md"),
-            path.join(targetDir, "CLAUDE.md"),
-            "CLAUDE.md"
-        );
-        return;
-    }
-
+function installRootGuidance(targetDir: string, adapter: HostAdapter): void {
     appendManagedInstruction(
-        path.join(PACKAGE_ROOT, "AGENTS.md"),
-        path.join(targetDir, "AGENTS.md"),
-        "AGENTS.md"
+        path.join(PACKAGE_ROOT, adapter.rootGuidanceSource),
+        path.join(targetDir, adapter.rootGuidanceTarget),
+        adapter.rootGuidanceTarget
     );
 }
 
@@ -156,6 +169,7 @@ export async function install(args: InstallArgs): Promise<void> {
     }
 
     const host = resolveHost(args.host, targetDir);
+    const adapter = getHostAdapter(host);
 
     console.log(`\n${BOLD}── ${PACKAGE_NAME} → ${targetDir} ──${RESET}\n`);
     info(`Resolved host: ${describeHost(host)}${args.host === "auto" ? " (--host auto)" : ""}`);
@@ -171,19 +185,21 @@ export async function install(args: InstallArgs): Promise<void> {
     // ── Layer 2: multi-agent orchestration ────────────────────────────
     step(`Layer 2: ${describeHost(host)} workflow layer`);
 
-    ensureDir(path.join(targetDir, getCommandInstallDir(host)));
+    ensureDir(path.join(targetDir, adapter.commandTargetDir));
 
-    installRootGuidance(targetDir, host);
+    installRootGuidance(targetDir, adapter);
     installRolesConfig(targetDir, host);
-    installGeminiMd(targetDir, host);
-    installPipelineSkills(targetDir, host);
+    installGeminiMd(targetDir, adapter);
+    installPipelineCommands(targetDir, adapter);
+    installBuiltInSkills(targetDir, adapter);
+    installOmoAgents(targetDir, adapter);
 
     if (args.mcp) {
-        installMcpSettings(targetDir, host);
+        installMcpSettings(targetDir, adapter);
     }
 
     // ── Summary ───────────────────────────────────────────────────────
-    printSummary(targetDir, args, host);
+    printSummary(targetDir, args, host, adapter);
 }
 
 // ─── Layer 1: call npx agent-security-policies ───────────────────────
@@ -217,8 +233,8 @@ function installRolesConfig(targetDir: string, host: ResolvedHost): void {
 }
 
 // ─── Layer 2c: GEMINI.md (doesn't exist in agent-security-policies) ──
-function installGeminiMd(targetDir: string, host: ResolvedHost): void {
-    if (isOpenCodeHost(host)) {
+function installGeminiMd(targetDir: string, adapter: HostAdapter): void {
+    if (!adapter.installGeminiMd) {
         info("Skipping GEMINI.md for OpenCode hosts");
         return;
     }
@@ -228,22 +244,44 @@ function installGeminiMd(targetDir: string, host: ResolvedHost): void {
     copyFile(src, dest, "GEMINI.md");
 }
 
-// ─── Layer 2c: pipeline skills ────────────────────────────────────────
-function installPipelineSkills(targetDir: string, host: ResolvedHost): void {
-    const commandDir = getCommandInstallDir(host);
+// ─── Layer 2c: workflow commands ──────────────────────────────────────
+function installPipelineCommands(targetDir: string, adapter: HostAdapter): void {
+    installFileSet(
+        path.join(PACKAGE_ROOT, adapter.commandSourceDir),
+        path.join(targetDir, adapter.commandTargetDir),
+        PIPELINE_SKILLS,
+        (name) => `${name}.md`,
+        adapter.commandTargetDir
+    );
+}
 
-    for (const skill of PIPELINE_SKILLS) {
-        const src = path.join(PACKAGE_ROOT, ".claude", "commands", `${skill}.md`);
-        const dest = path.join(targetDir, commandDir, `${skill}.md`);
-        if (fs.existsSync(src)) {
-            copyFile(src, dest, `${commandDir}/${skill}.md`);
-        }
+function installBuiltInSkills(targetDir: string, adapter: HostAdapter): void {
+    installFileSet(
+        path.join(PACKAGE_ROOT, "templates", "skills"),
+        path.join(targetDir, adapter.skillTargetDir),
+        BUILTIN_SKILLS,
+        (name) => path.join(name, "SKILL.md"),
+        adapter.skillTargetDir
+    );
+}
+
+function installOmoAgents(targetDir: string, adapter: HostAdapter): void {
+    if (!adapter.agentTargetDir) {
+        return;
     }
+
+    installFileSet(
+        path.join(PACKAGE_ROOT, "templates", "agents"),
+        path.join(targetDir, adapter.agentTargetDir),
+        OMO_AGENT_FILES,
+        (name) => `${name}.md`,
+        adapter.agentTargetDir
+    );
 }
 
 // ─── Layer 2d: MCP settings (optional) ───────────────────────────────
-function installMcpSettings(targetDir: string, host: ResolvedHost): void {
-    if (host !== "claude-code") {
+function installMcpSettings(targetDir: string, adapter: HostAdapter): void {
+    if (!adapter.supportsMcp) {
         warn("--mcp currently applies only to Claude Code hosts — skipping");
         return;
     }
@@ -264,7 +302,7 @@ function installMcpSettings(targetDir: string, host: ResolvedHost): void {
 }
 
 // ─── Summary ─────────────────────────────────────────────────────────
-function printSummary(targetDir: string, args: InstallArgs, host: ResolvedHost): void {
+function printSummary(targetDir: string, args: InstallArgs, host: ResolvedHost, adapter: HostAdapter): void {
     console.log(`\n${BOLD}── Installation complete ──${RESET}\n`);
     console.log(`Host: ${describeHost(host)}`);
     if (host === "claude-code") {
@@ -285,16 +323,18 @@ function printSummary(targetDir: string, args: InstallArgs, host: ResolvedHost):
     console.log("");
     console.log("Pipeline skills: /plan  /code  /review  /report  /full-cycle");
     console.log("Ops skills:      /checkpoint  /rollback  /roles  /lint  /security-review");
+    console.log(`Built-in skill:  create-skill (${adapter.skillTargetDir}/create-skill/SKILL.md)`);
+    if (adapter.agentTargetDir) {
+        console.log("Custom agents:  Valkyrie-Forge  Valkyrie-Check  Barrier-Review  Archive-Note");
+    }
     if (!args.skipSecurity) {
         console.log("Security skills: /sast-scan  /secrets-scan  /dependency-scan");
         console.log("                 /container-scan  /iac-scan  /threat-model  /fix-findings");
     }
 
-    const commandDir = getCommandInstallDir(host);
-    const rootFile = host === "claude-code" ? "CLAUDE.md" : "AGENTS.md";
-
-    console.log(`Guidance file: ${rootFile}`);
-    console.log(`Commands dir:  ${commandDir}`);
+    console.log(`Guidance file: ${adapter.rootGuidanceTarget}`);
+    console.log(`Commands dir:  ${adapter.commandTargetDir}`);
+    console.log(`State dir:     ${DEFAULT_PERSISTENCE_DIR} (opt-in via .multi-agent.json)`);
     console.log(`Config:        .multi-agent.json`);
     console.log(`\n${GREEN}Done. Open ${describeHost(host)} in ${targetDir} and try: /full-cycle <your task>${RESET}\n`);
 }

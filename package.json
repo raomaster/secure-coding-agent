@@ -1,6 +1,6 @@
 {
   "name": "secure-coding-agent",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Security-first orchestration for Claude Code and OpenCode-based AI workflows.",
   "keywords": [
     "secure-coding",
@@ -40,7 +40,8 @@
     "GEMINI.md",
     ".multi-agent.json",
     ".claude/commands/",
-    ".claude/settings.json"
+    ".claude/settings.json",
+    "templates/"
   ],
   "scripts": {
     "build": "tsc",

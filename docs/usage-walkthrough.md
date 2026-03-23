@@ -38,6 +38,8 @@ What to highlight:
 
 Open `.multi-agent.json` and explain:
 
+- host
+- persistence
 - planner
 - coder
 - reviewer
@@ -64,6 +66,8 @@ Show the installed files:
 - `CLAUDE.md` or `AGENTS.md`
 - `.multi-agent.json`
 - `.claude/commands/*` or `.opencode/command/*`
+- `create-skill` in the host skill directory
+- `.claude/agents/*` when demonstrating `opencode-omo`
 
 ### 5. Close with the thesis
 

@@ -86,14 +86,18 @@ Tell the user the resolved host and the key files:
 - `claude-code`
   - `CLAUDE.md`
   - `.claude/commands/*`
+  - `.claude/skills/create-skill/SKILL.md`
   - `.multi-agent.json`
 - `opencode`
   - `AGENTS.md`
   - `.opencode/command/*`
+  - `.opencode/skills/create-skill/SKILL.md`
   - `.multi-agent.json`
 - `opencode-omo`
   - `AGENTS.md`
   - `.claude/commands/*`
+  - `.claude/skills/create-skill/SKILL.md`
+  - `.claude/agents/*`
   - `.multi-agent.json`
   - `Aegis` from `agent-security-policies`
 
@@ -106,3 +110,4 @@ Check the relevant files exist and explain the next command to try:
 - `/roles`
 
 If the host is `opencode-omo`, explicitly mention that built-in OmO agents stay intact and `Aegis` is the added security companion.
+If the user asks about plan persistence, explain that `.multi-agent.json` can opt into `.secure-coding/plan.md` and `.secure-coding/tasks.md` later.

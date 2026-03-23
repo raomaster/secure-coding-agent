@@ -18,7 +18,7 @@ HOST="auto"
 INSTALL_MCP=false
 SKIP_SECURITY=false
 PROFILE="standard"
-VERSION="0.1.2"
+VERSION="0.2.0"
 
 GREEN='\033[0;32m'; BLUE='\033[0;34m'; YELLOW='\033[0;33m'; BOLD='\033[1m'; NC='\033[0m'
 ok()   { echo -e "${GREEN}✅${NC} $1"; }
@@ -152,6 +152,11 @@ with open(src, "r", encoding="utf-8") as f:
 
 config["version"] = version
 config["host"] = host
+config["persistence"] = {
+    "dir": config.get("persistence", {}).get("dir", ".secure-coding"),
+    "write_plan": config.get("persistence", {}).get("write_plan", False),
+    "write_tasks": config.get("persistence", {}).get("write_tasks", False),
+}
 
 if host in {"opencode", "opencode-omo"}:
     config["roles"]["planner"] = {
@@ -187,6 +192,27 @@ PY
   ok ".multi-agent.json (role configuration)"
 }
 
+install_file_set() {
+  local source_dir="$1"
+  local dest_dir="$2"
+  local extension="$3"
+  shift 3
+
+  mkdir -p "$dest_dir"
+
+  for name in "$@"; do
+    local src="$source_dir/$name$extension"
+    local dest="$dest_dir/$name$extension"
+    if [[ -f "$dest" ]]; then
+      warn "${dest#"$TARGET/"} already exists — skipping"
+    else
+      mkdir -p "$(dirname "$dest")"
+      cp "$src" "$dest"
+      ok "${dest#"$TARGET/"}"
+    fi
+  done
+}
+
 install_pipeline_skills() {
   local dest_dir
   if [[ "$HOST_RESOLVED" == "opencode" ]]; then
@@ -209,6 +235,33 @@ install_pipeline_skills() {
       ok "${dest#"$TARGET/"}"
     fi
   done
+}
+
+install_builtin_skills() {
+  local dest_dir
+  if [[ "$HOST_RESOLVED" == "opencode" ]]; then
+    dest_dir="$TARGET/.opencode/skills/create-skill"
+  else
+    dest_dir="$TARGET/.claude/skills/create-skill"
+  fi
+
+  mkdir -p "$dest_dir"
+  local dest="$dest_dir/SKILL.md"
+  if [[ -f "$dest" ]]; then
+    warn "${dest#"$TARGET/"} already exists — skipping"
+  else
+    cp "$SCRIPT_DIR/templates/skills/create-skill/SKILL.md" "$dest"
+    ok "${dest#"$TARGET/"}"
+  fi
+}
+
+install_omo_agents() {
+  if [[ "$HOST_RESOLVED" != "opencode-omo" ]]; then
+    return
+  fi
+
+  install_file_set "$SCRIPT_DIR/templates/agents" "$TARGET/.claude/agents" ".md" \
+    archive-note barrier-review valkyrie-check valkyrie-forge
 }
 
 if [[ "$HOST" == "auto" ]]; then
@@ -278,6 +331,8 @@ esac
 
 render_roles_config
 install_pipeline_skills
+install_builtin_skills
+install_omo_agents
 
 # MCP settings (optional)
 if [[ "$INSTALL_MCP" == true ]]; then
@@ -315,6 +370,14 @@ fi
 echo ""
 echo "  Pipeline: /plan  /code  /review  /report  /full-cycle"
 echo "  Ops:      /checkpoint  /rollback  /roles  /lint  /security-review"
+if [[ "$HOST_RESOLVED" == "opencode" ]]; then
+  echo "  Skill:    .opencode/skills/create-skill/SKILL.md"
+else
+  echo "  Skill:    .claude/skills/create-skill/SKILL.md"
+fi
+if [[ "$HOST_RESOLVED" == "opencode-omo" ]]; then
+  echo "  Agents:   .claude/agents/{archive-note,barrier-review,valkyrie-check,valkyrie-forge}.md"
+fi
 echo "  Security: /sast-scan  /secrets-scan  /dependency-scan"
 echo "            /container-scan  /iac-scan  /threat-model  /fix-findings"
 echo ""
@@ -330,6 +393,7 @@ else
   fi
 fi
 echo "  Config:   .multi-agent.json"
+echo "  State:    .secure-coding/ (only when enabled in config or requested)"
 echo ""
 echo -e "${GREEN}Open $HOST_RESOLVED in $TARGET and try: /full-cycle <your task>${NC}"
 echo ""

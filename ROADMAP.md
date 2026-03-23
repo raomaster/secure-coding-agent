@@ -25,42 +25,43 @@ Expected outcome:
 
 ---
 
-## v0.2.0 — Review contract + cache
+## v0.2.0 — Host-aware workflow bundles
 
 Focus:
 
-- validate `.multi-agent.json` on load
-- add review cache primitives
-- expose cache status and cache clear workflows
-- formalize stable review behavior vs preview security-review behavior
+- promote `claude-code`, `opencode`, and `opencode-omo` to first-class host modes
+- ship host-specific guidance, commands, skills, and OmO custom agents
+- add optional `.secure-coding/` persistence settings for plans and task lists
+- install a reusable `create-skill` skill for local workflow extension
 
 Expected outcome:
 
-- lower repeated review cost
-- clearer runtime behavior
+- clearer runtime behavior across hosts
+- stronger OpenCode / OmO story
 - stronger workflow credibility
 
 ---
 
-## v0.3.0 — Policy-aware security review
+## v0.3.0 — Validation + diagnostics
 
 Focus:
 
-- mature `/security-review`
-- unify static findings + AI review into a cleaner report contract
-- improve command generation from role config
-- reduce environment ambiguity around scanners and reporters
+- validate `.multi-agent.json` on load
+- add smarter runtime dependency diagnostics
+- tighten command generation from role config and host capabilities
+- reduce environment ambiguity around scanners and optional runtimes
 
 Expected outcome:
 
-- the project becomes clearly differentiated as a security-first orchestration system
+- lower operator confusion and fewer broken runtime combinations
 
 ---
 
-## v0.4.0 — Shared context and advanced orchestration
+## v0.4.0 — Shared context and richer artifacts
 
 Focus:
 
+- richer `.secure-coding/` artifacts and checkpoints
 - MCP-backed shared memory
 - scanner orchestration via MCP or a clearer tool abstraction
 - richer reviewer / reporter coordination

@@ -23,6 +23,8 @@ Before risky changes, prefer `/checkpoint` and be ready to use `/rollback`.
 - Keep built-in OmO agents intact. Add secure-coding-agent behavior through custom commands, skills, and agents instead of renaming OmO agents.
 - For discovery, prefer host-native exploration flows such as OpenCode's `plan` agent, `@explore`, or OmO's built-ins.
 - If the user explicitly asks to persist plans or tasks, write secure-coding-agent artifacts to `.secure-coding/`, not `.sisyphus/`.
+- If custom OmO agents are installed, use them for their narrow responsibilities: `Valkyrie-Forge`, `Valkyrie-Check`, `Barrier-Review`, and `Archive-Note`.
+- The reusable `create-skill` skill should be used when authoring or refining project skills.
 
 ## Role Config
 
@@ -36,6 +38,7 @@ Before risky changes, prefer `/checkpoint` and be ready to use `/rollback`.
 
 For OpenCode hosts, the defaults point to the active OpenCode session.
 Use `/roles` to inspect or change the current stack.
+Use the `persistence` block in `.multi-agent.json` to decide whether plans or task lists are mirrored into `.secure-coding/`.
 
 ## Security Expectations
 

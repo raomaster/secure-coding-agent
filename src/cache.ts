@@ -1,4 +1,4 @@
-// src/cache.ts — Security review cache types (implementation in v0.2.0)
+// src/cache.ts — Security review cache types (future design placeholder)
 // See docs/cache-design.md for full design.
 
 export type CacheStatus = "clean" | "findings" | "fixed" | "stale" | "skipped";
@@ -47,7 +47,7 @@ export interface SecurityCache {
     entries: Record<string, CacheEntry>;  // key: relative file path
 }
 
-// ─── Planned public API (v0.2.0) ─────────────────────────────────────
+// ─── Planned public API (future release) ──────────────────────────────
 
 /**
  * Load cache from disk. Returns empty cache if not found.

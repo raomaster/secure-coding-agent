@@ -52,12 +52,16 @@ function printHelp(): void {
     https://raw.githubusercontent.com/raomaster/secure-coding-agent/main/docs/guide/installation.md
 
   Host defaults:
-    claude-code  → CLAUDE.md + .claude/commands + .multi-agent.json
-    opencode     → AGENTS.md + .opencode/command + .multi-agent.json
-    opencode-omo → AGENTS.md + .claude/commands + .multi-agent.json + Aegis
+    claude-code  → CLAUDE.md + .claude/commands + .claude/skills + .multi-agent.json
+    opencode     → AGENTS.md + .opencode/command + .opencode/skills + .multi-agent.json
+    opencode-omo → AGENTS.md + .claude/commands + .claude/skills + .claude/agents + .multi-agent.json + Aegis
 
   Layers:
     Layer 1: agent-security-policies security substrate
     Layer 2: secure-coding-agent workflow layer for the resolved host
+
+  Extras:
+    create-skill  → reusable skill packaged for every host
+    .secure-coding/ → optional plan/task persistence configured in .multi-agent.json
 `);
 }

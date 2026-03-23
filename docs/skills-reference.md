@@ -1,8 +1,8 @@
 # Skills Reference
 
-Complete reference for all Claude Code slash commands available after installing `secure-coding-agent`.
+Complete reference for the workflow commands and packaged skills available after installing `secure-coding-agent`.
 
-Stable in `v0.1.x`:
+Stable in `v0.2.x`:
 - `/plan`
 - `/code`
 - `/review`
@@ -40,6 +40,7 @@ Analyzes a requirement, explores the codebase, and produces a structured task pl
 - Which tasks can run in parallel (no shared files)
 - Initial security surface analysis
 - Recommendation for `/threat-model` if new trust boundaries are introduced
+- Optional `.secure-coding/plan.md` and `.secure-coding/tasks.md` when persistence is enabled or explicitly requested
 
 **When to use**: Before any `/code` call. If you skip `/plan`, Haiku workers may make conflicting changes.
 
@@ -59,7 +60,7 @@ Delegates code implementation to the coder CLI. Creates a checkpoint automatical
 
 **Auto-checkpoint**: Creates `mca-checkpoint: before-code-TIMESTAMP` git stash before running.
 
-**Reads**: `.multi-agent.json` → `roles.coder` to determine which CLI and model to use.
+**Reads**: `.multi-agent.json` → `host`, `roles.coder`, and optional persistence settings.
 
 **Parallel execution**: For tasks without shared files, sends multiple Bash calls in the same message.
 
@@ -72,12 +73,11 @@ Delegates code implementation to the coder CLI. Creates a checkpoint automatical
 **Phase**: 4 — Security Review
 **Agent**: Configured `reviewer` role (host-aware default)
 
-Runs security review on changed files. In v0.2.0+, checks cache first — only sends files that changed since last review.
+Runs security review on changed files using the configured reviewer.
 
 ```
 /review
 /review src/auth/ src/middleware/
-/review --force    (v0.2.0: bypass cache, force full review)
 ```
 
 **Standards applied**: OWASP ASVS 5.0, CWE/SANS Top 25 2025, NIST SSDF 1.1
@@ -102,7 +102,7 @@ Generates a markdown executive report from all findings in the current session.
 
 ```
 /report
-/report include-cache-findings    (v0.2.0: include historical findings from cache)
+/report for the last implementation pass
 ```
 
 **Output**: `security-report-YYYYMMDD.md` with status badge, top actions, metrics, and remediation roadmap.
@@ -123,12 +123,7 @@ Runs the complete pipeline with automatic checkpoint at start.
 
 **Pipeline**:
 ```
-checkpoint → plan → [confirm] → code (Haiku workers) → review (Gemini Pro) → report (Gemini Flash)
-```
-
-**v0.2.0 pipeline**:
-```
-checkpoint → plan → [confirm] → code → lint → lint-fix → sast-scan → review → report
+checkpoint → plan → [confirm] → code → review → report
 ```
 
 ---
@@ -177,6 +172,36 @@ checkpoint → plan → [confirm] → code → lint → lint-fix → sast-scan �
 ```
 
 **Changes take effect immediately** — all skills read `.multi-agent.json` at runtime.
+
+---
+
+## Packaged reusable skills
+
+### `create-skill`
+
+**Path**:
+
+- `.claude/skills/create-skill/SKILL.md` for `claude-code` and `opencode-omo`
+- `.opencode/skills/create-skill/SKILL.md` for `opencode`
+
+Creates or refines reusable project skills using the secure-coding-agent skill contract.
+
+Use it when you want to:
+
+- create a new repo-local skill
+- refactor an existing skill into a clearer format
+- align a skill with local workflow, security, or naming conventions
+
+The skill follows the project format from `agent-security-policies` and encourages deterministic sections such as prerequisites, run instructions, output format, interpretation rules, and next steps.
+
+### OmO custom agents
+
+When the host is `opencode-omo`, the installer also adds these project agents in `.claude/agents/`:
+
+- `Valkyrie-Forge` — bounded implementation worker
+- `Valkyrie-Check` — focused validation worker
+- `Barrier-Review` — final risk review worker
+- `Archive-Note` — handoff and documentation worker
 
 ---
 
@@ -290,36 +315,13 @@ AI-assisted remediation of findings from any scan.
 
 ---
 
-## Planned Skills (v0.2.0)
+## Future workflows
 
-### `/lint`
+The roadmap now focuses on:
 
-Runs the appropriate linter for the detected language. See [ROADMAP.md](../ROADMAP.md).
+- richer `.secure-coding/` artifacts and checkpoints
+- smarter runtime validation and diagnostics
+- deeper MCP-backed shared context
+- broader CI-native review and reporting workflows
 
-### `/lint-fix`
-
-Delegates linter finding fixes to the coder (Haiku by default).
-
-### `/cache-status`
-
-Shows which files have been security-reviewed and their current status.
-
-### `/cache-clear`
-
-Invalidates security review cache entries (force full re-review on next `/review`).
-
----
-
-## Planned Skills (v0.3.0)
-
-### `/devsecops-cycle`
-
-Full automated pipeline: checkpoint → plan → code → lint → lint-fix → scan-all → fix-all → review → report
-
-### `/scan-all`
-
-Runs all security scans in parallel (SAST + secrets + deps) and merges findings.
-
-### `/fix-all`
-
-Single AI pass to fix all consolidated findings from all scanners.
+See [ROADMAP.md](../ROADMAP.md) for the forward-looking milestones.

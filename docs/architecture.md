@@ -56,6 +56,7 @@ Responsibilities:
 It defines:
 
 - host mode
+- optional `.secure-coding/` persistence policy
 - roles
 - CLI adapters
 - model mappings
@@ -93,7 +94,15 @@ The commands are deliberately file-based, because:
 - they are easy to inspect and version
 - they preserve the repo as the product surface
 
-### 4. Safety primitives
+### 4. Skills and host-specific agents
+
+The installer can also place reusable skill and agent assets depending on the host:
+
+- `create-skill` is installed as a reusable skill for all hosts
+- OmO installs additional custom agents in `.claude/agents/`
+- built-in OmO agents remain untouched; secure-coding-agent only adds complementary agents
+
+### 5. Safety primitives
 
 Safety is part of the architecture, not an add-on.
 
@@ -121,7 +130,8 @@ flowchart TD
     E --> F["CLAUDE.md or AGENTS.md"]
     E --> G[".multi-agent.json"]
     E --> H["Host command directory"]
-    E --> I["Optional MCP settings"]
+    E --> I["Host skills / agents"]
+    E --> J["Optional MCP settings"]
 ```
 
 ## Runtime Flow

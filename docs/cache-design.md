@@ -1,6 +1,6 @@
 # Security Review Cache — Design
 
-> Planned for v0.2.0. This document describes the design before implementation.
+> Planned for a future release. This document describes the design before implementation.
 
 ---
 
@@ -87,7 +87,7 @@ When `/review` runs:
 
 ---
 
-## `/review` Flow with Cache (v0.2.0)
+## `/review` Flow with Cache (future release)
 
 ```
 /review [files]
@@ -191,7 +191,7 @@ Cache entries are local to each developer's machine — not committed to git. Th
 
 ---
 
-## Implementation Plan (v0.2.0)
+## Implementation Plan (future release)
 
 1. `src/cache.ts` — cache read/write/invalidation logic
 2. Update `src/installer.ts` — add `.multi-agent-cache/` to `.gitignore` during install

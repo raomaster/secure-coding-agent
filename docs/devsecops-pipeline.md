@@ -14,7 +14,7 @@ The key insight: **use cheap/fast tools first** (linters, automated scanners), *
 
 ---
 
-## Current Pipeline (v0.1.x)
+## Current Pipeline (v0.2.x)
 
 ```
 /full-cycle:

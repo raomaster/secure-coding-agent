@@ -5,7 +5,7 @@
 [![CI](https://github.com/raomaster/secure-coding-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/raomaster/secure-coding-agent/actions/workflows/ci.yml)
 ![Node >=18](https://img.shields.io/badge/node-%3E%3D18-339933?logo=node.js&logoColor=white)
 ![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)
-![Status v0.1](https://img.shields.io/badge/status-v0.1%20stable-0a7f5a)
+![Status v0.2](https://img.shields.io/badge/status-v0.2%20stable-0a7f5a)
 
 **A security-first workflow layer for Claude Code and OpenCode-based agents.**
 
@@ -108,13 +108,15 @@ Key design choices:
 
 ## Stable today
 
-These flows are part of the current `v0.1.x` stable surface:
+These flows are part of the current `v0.2.x` stable surface:
 
 - `npx secure-coding-agent`
 - prompt-based install via `docs/guide/installation.md`
 - positional target path support
 - `--host auto|claude-code|opencode|opencode-omo`
 - `.multi-agent.json` installation and role configuration
+- built-in `create-skill` skill
+- OmO custom agents for `opencode-omo`
 - `/plan`, `/code`, `/review`, `/report`, `/full-cycle`
 - `/checkpoint`, `/rollback`, `/roles`
 - TypeScript installer + bash installer
@@ -127,7 +129,6 @@ These capabilities are intentionally shipped as **preview / evolving workflows**
 
 - `/lint`
 - `/security-review`
-- advanced cache-driven review flows described in the roadmap
 - deeper MCP-based shared context and scanner orchestration
 
 The goal is to keep the core reliable while higher-value workflows mature in public.
@@ -201,6 +202,7 @@ Required CLIs depend on the workflow you want:
 | Full security layer | `agent-security-policies` install path via `npx` |
 | Claude host mode | `@anthropic-ai/claude-code` |
 | OpenCode host mode | `opencode` |
+| OpenCode + OmO host mode | `opencode` + `oh-my-openagent` |
 | Optional Codex specialist role | `@openai/codex` |
 | Optional Gemini review/reporting | `@google/gemini-cli` |
 
@@ -227,6 +229,12 @@ See [docs/compatibility.md](docs/compatibility.md) for explicit behavior and lim
 |---|---|
 | `/lint` | Run language-aware linting |
 | `/security-review` | Run a broader static + AI review workflow |
+
+### Packaged reusable skill
+
+| Skill | Purpose |
+|---|---|
+| `create-skill` | Create or refine repo-local skills using the project skill contract |
 
 ## Installation details
 
@@ -280,18 +288,21 @@ Layer 2 from this package installs:
 
 - `CLAUDE.md` for `claude-code` hosts
 - `AGENTS.md` for `opencode` and `opencode-omo` hosts
-- `.multi-agent.json` role configuration with host-aware defaults
+- `.multi-agent.json` role configuration with host-aware defaults and optional `.secure-coding/` persistence settings
 - `.claude/commands/*` for `claude-code` and `opencode-omo`
 - `.opencode/command/*` for plain `opencode`
+- `create-skill` in `.claude/skills/` or `.opencode/skills/` depending on host
+- OmO custom agents in `.claude/agents/` for `opencode-omo`
+- OmO built-ins remain untouched; `secure-coding-agent` only adds complementary project agents
 - optional `.claude/settings.json` for Claude Code MCP
 
 ## Roadmap
 
 Near-term roadmap:
 
-- cache-aware review to reduce repeated AI review cost
-- clearer stable vs preview command contracts
-- deeper reviewer / reporter command generation from config
+- richer `.secure-coding/` persistence and artifact workflows
+- stronger OpenCode / OmO command specialization
+- optional role validation and smarter diagnostics
 - MCP-backed shared memory and scanner orchestration
 - CI-native review workflows and artifacts
 

@@ -47,6 +47,7 @@ The coder cannot ask for more context later, so provide everything up front:
 - Read the relevant files with `Read`, `Glob`, and `Grep`
 - Identify types, interfaces, conventions, and existing tests
 - Decide whether subtasks are dependent or can run in parallel
+- If `.secure-coding/tasks.md` exists, treat it as the persisted task checklist for progress tracking
 
 ### 3. Build and run the command for the configured CLI
 
@@ -71,6 +72,7 @@ codex --approval-policy auto-edit -q "[complete task description with context]"
 
 Implement the task in the current OpenCode session instead of spawning a nested `opencode` process.
 Use host-native subagents such as `@explore` or `@general` when they improve discovery or parallel read-only work.
+If OmO custom agents are installed, prefer `@valkyrie-forge` for bounded implementation work and `@valkyrie-check` for focused validation.
 
 #### If coder = opencode on a non-OpenCode host
 

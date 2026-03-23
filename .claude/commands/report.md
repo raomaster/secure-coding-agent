@@ -32,6 +32,8 @@ Read existing reports or use the current session context:
 ls *-report.json security-report-*.md threat-model-*.md 2>/dev/null || echo "(use findings from the current context)"
 ```
 
+If `.secure-coding/plan.md` or `.secure-coding/tasks.md` exists, use them to frame the report around the intended scope and completed work.
+
 ### 3. Generate the report using the configured CLI
 
 #### If reporter = gemini

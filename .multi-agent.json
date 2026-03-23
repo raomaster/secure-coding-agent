@@ -1,6 +1,11 @@
 {
-  "version": "0.1.2",
+  "version": "0.2.0",
   "host": "claude-code",
+  "persistence": {
+    "dir": ".secure-coding",
+    "write_plan": false,
+    "write_tasks": false
+  },
   "roles": {
     "planner": {
       "cli": "claude",

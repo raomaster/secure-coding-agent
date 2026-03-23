@@ -38,6 +38,7 @@ You are **Claude Sonnet 4.6**, the orchestrator of this multi-agent workflow.
 ### Phase 2: Plan + Clarification
 - Present the plan before execution and wait for confirmation
 - Break the work into atomic tasks, explicitly calling out dependencies and what can run in parallel
+- If `.multi-agent.json` enables persistence, mirror approved plans and task lists into `.secure-coding/`
 
 ### Phase 3: Coder (Haiku 4.5)
 
@@ -84,3 +85,5 @@ codex --approval-policy auto-edit -q "[task]"
 | `/full-cycle` | All | End-to-end pipeline: plan → code → review → report |
 
 Security skills such as `/sast-scan`, `/secrets-scan`, `/dependency-scan`, `/container-scan`, `/iac-scan`, `/threat-model`, and `/fix-findings` are installed by `npx agent-security-policies --skills`.
+
+The reusable `create-skill` skill is installed in `.claude/skills/create-skill/SKILL.md`.

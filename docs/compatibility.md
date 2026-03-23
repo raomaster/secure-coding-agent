@@ -28,6 +28,7 @@ Windows / WSL is not yet first-class support.
 
 - `@anthropic-ai/claude-code`
 - `opencode` for OpenCode host mode
+- `oh-my-openagent` for the full `opencode-omo` host mode
 
 ### Optional role runtimes
 
@@ -47,13 +48,16 @@ Windows / WSL is not yet first-class support.
 
 ## Stable command contract
 
-The stable `v0.1.x` contract includes:
+The stable `v0.2.x` contract includes:
 
 - install via `npx secure-coding-agent`
 - prompt-based install guidance via `docs/guide/installation.md`
 - positional target path
 - `--host auto|claude-code|opencode|opencode-omo`
 - `.multi-agent.json`
+- optional `.secure-coding/` persistence controlled from config
+- `create-skill` as a packaged reusable skill
+- OmO custom agents for `opencode-omo`
 - `/plan`, `/code`, `/review`, `/report`, `/full-cycle`
 - `/checkpoint`, `/rollback`, `/roles`
 

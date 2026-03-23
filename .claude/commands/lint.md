@@ -1,5 +1,5 @@
 ---
-description: "[v0.2.0 preview] Run the language-appropriate linter: ESLint, Ruff, golangci-lint, Clippy, ShellCheck"
+description: "[preview] Run the language-appropriate linter: ESLint, Ruff, golangci-lint, Clippy, ShellCheck"
 ---
 
 # Lint
@@ -8,7 +8,7 @@ Detect the project language and run the appropriate linter. No AI, no token cost
 
 $ARGUMENTS (directory to analyze; defaults to the current directory)
 
-> v0.2.0 preview: this skill is available, but automatic `/full-cycle` integration is planned for v0.2.0.
+> Preview workflow: this skill is available, but automatic `/full-cycle` integration is still future work.
 
 ## Process
 

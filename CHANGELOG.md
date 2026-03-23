@@ -10,6 +10,25 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [0.2.0] — 2026-03-23
+
+### Added
+
+- Host adapter structure for `claude-code`, `opencode`, and `opencode-omo`
+- `create-skill` as a packaged reusable skill for all host modes
+- OmO custom agents: `Valkyrie-Forge`, `Valkyrie-Check`, `Barrier-Review`, and `Archive-Note`
+- Optional `.secure-coding/` persistence settings in `.multi-agent.json`
+- Monster-mode planning note in `agent-orchestration-profiles/SECURE_CODING_AGENT_MONSTER_MODE.md`
+
+### Changed
+
+- OpenCode hosts now install host-native skills alongside workflow commands
+- OmO installs now add custom project agents without renaming built-in OmO agents
+- Workflow docs now describe prompt-based install, host-aware bundles, and `.secure-coding/` persistence
+- Bash and TypeScript installers remain aligned for host-aware assets, skills, and OmO agents
+
+---
+
 ## [0.1.2] — 2026-03-23
 
 ### Added
